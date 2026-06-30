@@ -1,191 +1,139 @@
--- ตั้งค่าตัวแปรภาษาเริ่มต้น (ถ้าไม่มีการตั้งค่าไว้ล่วงหน้า จะเป็นภาษาไทย "TH")
-if not getgenv().MARAGE_Lang then
-    getgenv().MARAGE_Lang = "TH"
-end
-local lang = getgenv().MARAGE_Lang
-
 -- โหลด Rayfield
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
  
--- Main Window (ปรับดีไซน์ชื่อเป็นเวอร์ชัน Beta มีวงเล็บตามสั่ง)
+-- Main Window
 local Window = Rayfield:CreateWindow({
-    Name = "MARAGE Hub (Beta)",
-    LoadingTitle = "Loading MARAGE Hub (Beta)...",
-    LoadingSubtitle = lang == "TH" and "โดย MARAGE" or "by MARAGE",
-    Theme = "Ocean",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "MARAGE",
-        FileName = "Config"
-    }
+Name = "Mirage hub (beta)",
+LoadingTitle = "Loading...",
+LoadingSubtitle = "by Mirage",
+ConfigurationSaving = {
+Enabled = true,
+FolderName = "Mirage	",
+FileName = "Config"
+}
 })
  
--- Tabs (ระบบแปลภาษาหัวข้อเมนู)
-local SettingsTab = Window:CreateTab(lang == "TH" and "ตั้งค่า" or "Settings")
-local MainTab     = Window:CreateTab(lang == "TH" and "เมนูหลัก" or "Main Menu")
-local TeleportTab = Window:CreateTab(lang == "TH" and "เทเลพอร์ต" or "Teleport")
-local VisualsTab  = Window:CreateTab(lang == "TH" and "มองต่างๆ" or "Visuals")
-local ExtraTab    = Window:CreateTab(lang == "TH" and "ของเสริม" or "Extras")
-local FPSTab      = Window:CreateTab(lang == "TH" and "FPS" or "FPS")
-local EventTab    = Window:CreateTab(lang == "TH" and "เกี่ยวกับอีเว้น" or "Events")
-local MapTab      = Window:CreateTab(lang == "TH" and "เเพ" or "Maps")
+-- Tabs
+local SettingsTab = Window:CreateTab("ตั้งค่า")
+local MainTab     = Window:CreateTab("เมนูหลัก")
+local TeleportTab = Window:CreateTab("เทเลพอร์ต")
+local VisualsTab  = Window:CreateTab("มองต่างๆ")
+local ExtraTab    = Window:CreateTab("ของเสริม")
+local FPSTab      = Window:CreateTab("FPS")
+local EventTab    = Window:CreateTab("เกี่ยวกับอีเว้น")
+local MapTab      = Window:CreateTab("เเมพ")
  
--- =========================
--- ระบบเปลี่ยนภาษา (Language Settings)
--- =========================
-SettingsTab:CreateDropdown({
-    Name = lang == "TH" and "เปลี่ยนภาษา (Language)" or "Change Language",
-    Options = {"ภาษาไทย (Thai)", "English"},
-    CurrentOption = lang == "TH" and "ภาษาไทย (Thai)" or "English",
-    MultipleOptions = false,
-    Callback = function(option)
-        local chosen = "TH"
-        if option == "English" then chosen = "EN" end
-        
-        if chosen ~= getgenv().MARAGE_Lang then
-            getgenv().MARAGE_Lang = chosen
-            Rayfield:Notify({
-                Title = chosen == "TH" and "เปลี่ยนภาษาสำเร็จ" or "Language Changed",
-                Content = chosen == "TH" and "กรุณารันสคริปต์ใหม่อีกครั้งเพื่อเปลี่ยนเป็นภาษาไทย" or "Please re-execute the script to apply English.",
-                Duration = 5
-            })
-        end
-    end
-})
-
----
-
 -- Auto Bhop
 local autoBhop = false
 local floatingBhopButton
 local TweenService = game:GetService("TweenService")
 local player = game.Players.LocalPlayer
  
--- สร้าง FloatingGui สำหรับจัดการปุ่มลอยทั้งหมด
+-- สร้าง FloatingGui
 local FloatingGui = game:GetService("CoreGui"):FindFirstChild("FloatingGui")
 if not FloatingGui then
-    FloatingGui = Instance.new("ScreenGui")
-    FloatingGui.Name = "FloatingGui"
-    FloatingGui.ResetOnSpawn = false
-    FloatingGui.Parent = game:GetService("CoreGui")
+FloatingGui = Instance.new("ScreenGui")
+FloatingGui.Name = "FloatingGui"
+FloatingGui.Parent = game:GetService("CoreGui")
 end
  
--- ฟังก์ชันดีไซน์ปุ่มลอยแบบใหม่ (Sleek Dark Neon)
-local function styleFloatingButton(btn, text, defaultColor)
-    btn.Size = UDim2.new(0, 145, 0, 50)
-    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-    btn.BackgroundTransparency = 0.2
-    btn.TextColor3 = defaultColor or Color3.fromRGB(255, 255, 255)
-    btn.Text = text
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 13
-    btn.Active = true
-    btn.Draggable = true
- 
-    local corner = Instance.new("UICorner", btn)
-    corner.CornerRadius = UDim.new(0, 12)
- 
-    local stroke = Instance.new("UIStroke", btn)
-    stroke.Thickness = 2
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    stroke.Color = Color3.fromRGB(0, 180, 255)
- 
-    return stroke
-end
-
--- อนิเมชั่นขอบไฟวิ่งสำหรับปุ่มทั่วไป
-local function animateStroke(stroke, color1, color2)
-    task.spawn(function()
-        while stroke and stroke.Parent do
-            TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = color1}):Play()
-            task.wait(1)
-            TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = color2}):Play()
-            task.wait(1)
-        end
-    end)
-end
- 
--- ปุ่มลอย Auto Bhop
+-- ปุ่มลอย
 local function createBhopFloatingButton()
-    if floatingBhopButton then return end
+if floatingBhopButton then return end
  
-    local btn = Instance.new("TextButton")  
-    btn.Position = UDim2.new(0.3, -70, 0.8, 0)  
-    btn.AnchorPoint = Vector2.new(0.5, 0)  
-    btn.Parent = FloatingGui  
-    
-    local function getBhopText()
-        if lang == "TH" then
-            return autoBhop and "Auto Bhop: เปิด" or "Auto Bhop: ปิด"
-        else
-            return autoBhop and "Auto Bhop: ON" or "Auto Bhop: OFF"
-        end
-    end
-
-    local stroke = styleFloatingButton(btn, getBhopText())
-    animateStroke(stroke, Color3.fromRGB(0, 120, 255), Color3.fromRGB(0, 255, 200))
+local btn = Instance.new("TextButton")  
+btn.Size = UDim2.new(0,140,0,52)  
+btn.Position = UDim2.new(0.3,-70,0.8,0)  
+btn.AnchorPoint = Vector2.new(0.5,0)  
+btn.BackgroundColor3 = Color3.fromRGB(15,20,35)  
+btn.BackgroundTransparency = 0.35  
+btn.TextColor3 = Color3.fromRGB(0,70,150)  
+btn.Text = "Auto Bhop: OFF"  
+btn.Font = Enum.Font.GothamBold  
+btn.TextSize = 14  
+btn.Parent = FloatingGui  
+btn.Active = true  
+btn.Draggable = true  
  
-    btn.MouseButton1Click:Connect(function()  
-        autoBhop = not autoBhop  
-        btn.Text = getBhopText()
-        btn.TextColor3 = autoBhop and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(255, 255, 255)
-    end)  
+local corner = Instance.new("UICorner", btn)  
+corner.CornerRadius = UDim.new(0,18)  
  
-    floatingBhopButton = btn
+local stroke = Instance.new("UIStroke", btn)  
+stroke.Thickness = 2.5  
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border  
+stroke.Color = Color3.fromRGB(0,120,255)  
+ 
+task.spawn(function()  
+    while btn.Parent do  
+        TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = Color3.fromRGB(0,80,255)}):Play()  
+        task.wait(0.8)  
+        TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = Color3.fromRGB(160,230,255)}):Play()  
+        task.wait(0.8)  
+    end  
+end)  
+ 
+btn.MouseButton1Click:Connect(function()  
+    autoBhop = not autoBhop  
+    btn.Text = autoBhop and "Auto Bhop: ON" or "Auto Bhop: OFF"  
+end)  
+ 
+floatingBhopButton = btn
+ 
 end
  
 local function removeBhopFloatingButton()
-    if floatingBhopButton then
-        floatingBhopButton:Destroy()
-        floatingBhopButton = nil
-    end
+if floatingBhopButton then
+floatingBhopButton:Destroy()
+floatingBhopButton = nil
+end
 end
  
--- Toggle ปกติ Auto Jump
+-- Toggle ปกติ
 MainTab:CreateToggle({
-    Name = lang == "TH" and "กระโดดอัตโนมัติ" or "Auto Jump",
-    CurrentValue = false,
-    Callback = function(state)
-        autoBhop = state
-    end
+Name = "Auto Jump",
+CurrentValue = false,
+Callback = function(state)
+autoBhop = state
+end
 })
  
--- Toggle ปุ่มลอย Auto Jump
+-- Toggle ปุ่มลอย
 MainTab:CreateToggle({
-    Name = lang == "TH" and "กระโดดอัตโนมัติ (ปุ่มลอย)" or "Auto Jump (Floating Button)",
-    CurrentValue = false,
-    Callback = function(state)
-        if state then
-            createBhopFloatingButton()
-        else
-            removeBhopFloatingButton()
-            autoBhop = false
-        end
-    end
+Name = "Auto Jump (Floating Button)",
+CurrentValue = false,
+Callback = function(state)
+if state then
+createBhopFloatingButton()
+else
+removeBhopFloatingButton()
+autoBhop = false
+end
+end
 })
  
 -- ระบบ Auto Bhop
 task.spawn(function()
-    local RunService = game:GetService("RunService")
-    local rayDistance = 4
-    local rayParams = RaycastParams.new()
-    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+local RunService = game:GetService("RunService")
+local rayDistance = 4
+local rayParams = RaycastParams.new()
+rayParams.FilterType = Enum.RaycastFilterType.Blacklist
  
-    while true do  
-        RunService.Heartbeat:Wait()  
-        if autoBhop then  
-            local char = player.Character or player.CharacterAdded:Wait()  
-            local humanoid = char:FindFirstChildOfClass("Humanoid")  
-            local root = char:FindFirstChild("HumanoidRootPart")  
-            if humanoid and root then  
-                rayParams.FilterDescendantsInstances = {char}  
-                local result = workspace:Raycast(root.Position, Vector3.new(0, -rayDistance, 0), rayParams)  
-                if result then  
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)  
-                end  
+while true do  
+    RunService.Heartbeat:Wait()  
+    if autoBhop then  
+        local char = player.Character or player.CharacterAdded:Wait()  
+        local humanoid = char:FindFirstChildOfClass("Humanoid")  
+        local root = char:FindFirstChild("HumanoidRootPart")  
+        if humanoid and root then  
+            rayParams.FilterDescendantsInstances = {char}  
+            local result = workspace:Raycast(root.Position, Vector3.new(0,-rayDistance,0), rayParams)  
+            if result then  
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)  
             end  
         end  
-    end
+    end  
+end
+ 
 end)
  
 -- =========================
@@ -194,69 +142,111 @@ end)
 local floatingLagButton
  
 local function lagSwitch(duration)
-    local start = tick()
-    while tick() - start < duration do
-        for i = 1, 1e7 do
-            local _ = math.random()
-        end
-    end
+local start = tick()
+while tick() - start < duration do
+for i = 1, 1e7 do
+local a = math.random()
+end
+end
 end
  
--- ปุ่มใน Tab Lag Switch
+-- ปุ่มใน Tab
 MainTab:CreateButton({
-    Name = lang == "TH" and "แลคสวิตช์ (ปกติ)" or "Lag Switch (Normal)",
-    Callback = function()
-        lagSwitch(0.5)
-    end
+Name = "Lag Switch (ปกติ)",
+Callback = function()
+lagSwitch(0.5)
+end
 })
  
--- ปุ่มลอย Lag Switch
+-- =========================
+-- ปุ่มลอยสไตล์มึง
+-- =========================
 local function createLagFloatingButton()
-    if floatingLagButton then return end
+if floatingLagButton then return end
  
-    local btn = Instance.new("TextButton")  
-    btn.Position = UDim2.new(0.7, -70, 0.8, 0)  
-    btn.AnchorPoint = Vector2.new(0.5, 0)  
-    btn.Parent = FloatingGui  
+local btn = Instance.new("TextButton")  
+btn.Size = UDim2.new(0,140,0,52)  
+btn.Position = UDim2.new(0.7,-70,0.8,0)  
+btn.AnchorPoint = Vector2.new(0.5,0)  
+btn.BackgroundColor3 = Color3.fromRGB(15,20,35)  
+btn.BackgroundTransparency = 0.35  
+btn.TextColor3 = Color3.fromRGB(0,70,150)  
+btn.Text = "Lag Switch"  
+btn.Font = Enum.Font.GothamBold  
+btn.TextSize = 14  
+btn.Parent = FloatingGui  
+btn.Active = true  
+btn.Draggable = true  
  
-    local stroke = styleFloatingButton(btn, lang == "TH" and "แลคสวิตช์" or "Lag Switch")
-    animateStroke(stroke, Color3.fromRGB(255, 50, 50), Color3.fromRGB(255, 150, 0))
+-- มุมโค้ง  
+local corner = Instance.new("UICorner", btn)  
+corner.CornerRadius = UDim.new(0,18)  
  
-    btn.MouseButton1Click:Connect(function()  
-        lagSwitch(0.5)  
-    end)  
+-- ขอบ  
+local stroke = Instance.new("UIStroke", btn)  
+stroke.Thickness = 2.5  
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border  
+stroke.Color = Color3.fromRGB(0,120,255)  
  
-    floatingLagButton = btn
+-- ไล่สี  
+task.spawn(function()  
+    while btn.Parent do  
+        TweenService:Create(  
+            stroke,  
+            TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),  
+            {Color = Color3.fromRGB(0,80,255)}  
+        ):Play()  
+        task.wait(0.8)  
+ 
+        TweenService:Create(  
+            stroke,  
+            TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),  
+            {Color = Color3.fromRGB(160,230,255)}  
+        ):Play()  
+        task.wait(0.8)  
+    end  
+end)  
+ 
+-- กดปุ่ม  
+btn.MouseButton1Click:Connect(function()  
+    lagSwitch(0.5)  
+end)  
+ 
+floatingLagButton = btn
+ 
 end
  
 local function removeLagFloatingButton()
-    if floatingLagButton then
-        floatingLagButton:Destroy()
-        floatingLagButton = nil
-    end
+if floatingLagButton then
+floatingLagButton:Destroy()
+floatingLagButton = nil
+end
 end
  
--- Toggle ปุ่มลอย Lag Switch
+-- Toggle ปุ่มลอย
 MainTab:CreateToggle({
-    Name = lang == "TH" and "แลคสวิตช์ (ปุ่มลอย)" or "Lag Switch (Floating Button)",
-    CurrentValue = false,
-    Callback = function(state)
-        if state then
-            createLagFloatingButton()
-        else
-            removeLagFloatingButton()
-        end
-    end
+Name = "Lag Switch (Floating Button)",
+CurrentValue = false,
+Callback = function(state)
+if state then
+createLagFloatingButton()
+else
+removeLagFloatingButton()
+end
+end
 })
  
 -- =========================  
--- Auto Bounce
+-- Auto Bounce (แม่นยำสูง + ปรับความสูงได้ + ปุ่มลอยสไตล์ Auto Jump)  
 -- =========================  
 local autoBounce = false  
 local floatingBounceButton  
-local bouncePower = 150 
-local groundCheckDistance = 6 
+local bouncePower = 150 -- ค่าเริ่มต้น  
+local groundCheckDistance = 6 -- ระยะเช็คใกล้พื้น (studs)  
+local TweenService = game:GetService("TweenService")
+local player = game.Players.LocalPlayer
  
+-- ระบบเด้ง
 task.spawn(function()  
     local RunService = game:GetService("RunService")  
     while true do  
@@ -284,16 +274,16 @@ task.spawn(function()
     end  
 end)  
  
--- Toggle ปกติ Auto Bounce
+-- Toggle ปกติ
 MainTab:CreateToggle({  
-    Name= lang == "TH" and "ออโต้เด้ง (ปกติ)" or "Auto Bounce (Normal)",  
+    Name="ออโต้เด้ง (ปกติ)",  
     CurrentValue=false,  
     Callback=function(state) autoBounce = state end  
 })  
  
--- Slider ปรับความสูงการเด้ง
+-- Slider ปรับความสูง
 MainTab:CreateSlider({  
-    Name = lang == "TH" and "ปรับความสูงการเด้ง" or "Adjust Bounce Height",  
+    Name = "ปรับความสูงการเด้ง",  
     Range = {50, 300},  
     Increment = 5,  
     Suffix = "studs",  
@@ -303,30 +293,58 @@ MainTab:CreateSlider({
     end  
 })  
  
--- ปุ่มลอย Auto Bounce
+-- =========================
+-- ปุ่มลอยสไตล์ Auto Jump
+-- =========================
 local function createBounceFloatingButton()
     if floatingBounceButton then return end
  
     local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.5, -70, 0.85, 0)
-    btn.AnchorPoint = Vector2.new(0.5, 0)
+    btn.Size = UDim2.new(0,140,0,52)
+    btn.Position = UDim2.new(0.5,-70,0.85,0)
+    btn.AnchorPoint = Vector2.new(0.5,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,220,255)
+    btn.BackgroundTransparency = 0.35
+    btn.TextColor3 = Color3.fromRGB(0,70,150)
+    btn.Text = autoBounce and "Auto Bounce: ON" or "Auto Bounce: OFF"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
     btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
  
-    local function getBounceText()
-        if lang == "TH" then
-            return autoBounce and "ออโต้เด้ง: เปิด" or "ออโต้เด้ง: ปิด"
-        else
-            return autoBounce and "Auto Bounce: ON" or "Auto Bounce: OFF"
+    -- มุมโค้ง
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,18)
+ 
+    -- ขอบ
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2.5
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Color = Color3.fromRGB(0,120,255)
+ 
+    -- ไล่สีเหมือน Auto Jump
+    task.spawn(function()
+        while btn.Parent do
+            TweenService:Create(
+                stroke,
+                TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {Color = Color3.fromRGB(0,80,255)}
+            ):Play()
+            task.wait(0.8)
+            TweenService:Create(
+                stroke,
+                TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {Color = Color3.fromRGB(160,230,255)}
+            ):Play()
+            task.wait(0.8)
         end
-    end
-
-    local stroke = styleFloatingButton(btn, getBounceText())
-    animateStroke(stroke, Color3.fromRGB(0, 255, 150), Color3.fromRGB(0, 150, 255))
+    end)
  
+    -- กดปุ่ม
     btn.MouseButton1Click:Connect(function()
         autoBounce = not autoBounce
-        btn.Text = getBounceText()
-        btn.TextColor3 = autoBounce and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(255, 255, 255)
+        btn.Text = autoBounce and "Auto Bounce: ON" or "Auto Bounce: OFF"
     end)
  
     floatingBounceButton = btn
@@ -339,9 +357,9 @@ local function removeBounceFloatingButton()
     end
 end
  
--- Toggle ปุ่มลอย Auto Bounce
+-- Toggle ปุ่มลอย
 MainTab:CreateToggle({
-    Name = lang == "TH" and "ออโต้เด้ง (ปุ่มลอย)" or "Auto Bounce (Floating Button)",
+    Name = "ออโต้เด้ง (ปุ่มลอย)",
     CurrentValue = false,
     Callback = function(state)
         if state then
@@ -354,38 +372,58 @@ MainTab:CreateToggle({
 })
  
 -- =========================
--- Auto Respawn (Fake Revive)
+-- Auto Respawn (Fake Revive) + ปุ่มลอยสไตล์ Hub
 -- =========================
 getgenv().AutoRespawnEnabled = false
 local autoRespawnMethod = "Fake Revive"
 local lastSavedPosition
 local floatingRespawnButton
+local player = game.Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
  
--- ฟังก์ชันสร้างปุ่มลอย รีสปอน
+-- ฟังก์ชันสร้างปุ่มลอย
 local function createRespawnFloatingButton()
     if floatingRespawnButton then return end
  
     local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.7, -70, 0.85, 0)
-    btn.AnchorPoint = Vector2.new(0.5, 0)
+    btn.Size = UDim2.new(0,140,0,52)
+    btn.Position = UDim2.new(0.7,-70,0.85,0)
+    btn.AnchorPoint = Vector2.new(0.5,0)
+    btn.BackgroundColor3 = Color3.fromRGB(255,80,80)
+    btn.BackgroundTransparency = 0.35
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Text = getgenv().AutoRespawnEnabled and "Auto Respawn: ON" or "Auto Respawn: OFF"
     btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
     btn.ZIndex = 10
  
-    local function getRespawnText()
-        if lang == "TH" then
-            return getgenv().AutoRespawnEnabled and "รีสปอน: เปิด" or "รีสปอน: ปิด"
-        else
-            return getgenv().AutoRespawnEnabled and "Respawn: ON" or "Respawn: OFF"
+    -- มุมโค้ง
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,18)
+ 
+    -- ขอบ
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2.5
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Color = Color3.fromRGB(255,120,120)
+ 
+    -- ไล่สีสไตล์เดียวกับ Auto Jump/Bounce
+    task.spawn(function()
+        while btn.Parent do
+            TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = Color3.fromRGB(255,60,60)}):Play()
+            task.wait(0.8)
+            TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = Color3.fromRGB(255,150,150)}):Play()
+            task.wait(0.8)
         end
-    end
-
-    local stroke = styleFloatingButton(btn, getRespawnText(), Color3.fromRGB(255, 100, 100))
-    animateStroke(stroke, Color3.fromRGB(255, 50, 50), Color3.fromRGB(255, 100, 200))
+    end)
  
     btn.MouseButton1Click:Connect(function()
         getgenv().AutoRespawnEnabled = not getgenv().AutoRespawnEnabled
-        btn.Text = getRespawnText()
-        btn.TextColor3 = getgenv().AutoRespawnEnabled and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+        btn.Text = getgenv().AutoRespawnEnabled and "Auto Respawn: ON" or "Auto Respawn: OFF"
+        btn.BackgroundColor3 = getgenv().AutoRespawnEnabled and Color3.fromRGB(80,255,80) or Color3.fromRGB(255,80,80)
     end)
  
     floatingRespawnButton = btn
@@ -398,12 +436,13 @@ local function removeRespawnFloatingButton()
     end
 end
  
--- ฟังก์ชันตั้งค่า Auto Revive
+-- ฟังก์ชันตั้งค่า Auto Revive สำหรับตัวละคร
 local function setupAutoRevive(character)
     task.defer(function()
-        character:WaitForChild("HumanoidRootPart", 5)
-        character:WaitForChild("Humanoid", 5)
+        character:WaitForChild("HumanoidRootPart",5)
+        character:WaitForChild("Humanoid",5)
  
+        -- เก็บตำแหน่งล่าสุด
         task.spawn(function()
             while character and character.Parent do
                 local hrp = character:FindFirstChild("HumanoidRootPart")
@@ -414,6 +453,7 @@ local function setupAutoRevive(character)
             end
         end)
  
+        -- ตรวจ Downed
         character:GetAttributeChangedSignal("Downed"):Connect(function()
             if not getgenv().AutoRespawnEnabled then return end
             if character:GetAttribute("Downed") ~= true then return end
@@ -426,9 +466,9 @@ local function setupAutoRevive(character)
             local start = tick()
             repeat
                 pcall(function()
-                    game:GetService("ReplicatedStorage"):WaitForChild("Events", 9e9)
-                        :WaitForChild("Player", 9e9)
-                        :WaitForChild("ChangePlayerMode", 9e9)
+                    game:GetService("ReplicatedStorage"):WaitForChild("Events",9e9)
+                        :WaitForChild("Player",9e9)
+                        :WaitForChild("ChangePlayerMode",9e9)
                         :FireServer(true)
                 end)
                 task.wait(1)
@@ -449,20 +489,27 @@ local function setupAutoRevive(character)
     end)
 end
  
+-- เรียก setup สำหรับตัวละครปัจจุบันและใหม่
 if player.Character then setupAutoRevive(player.Character) end
 player.CharacterAdded:Connect(setupAutoRevive)
  
+-- =========================
+-- ปุ่มปกติ (แก้แล้ว)
+-- =========================
 MainTab:CreateToggle({
-    Name = lang == "TH" and "ออโต้รีสปอน (ปกติ)" or "Auto Respawn (Normal)",
+    Name = "ออโต้รีสปอน (ปกติ)",
     CurrentValue = false,
     Callback = function(state)
         getgenv().AutoRespawnEnabled = state
     end
 })
  
+-- =========================
+-- Dropdown (Rayfield ต้องใช้ CreateDropdown)
+-- =========================
 MainTab:CreateDropdown({
-    Name = lang == "TH" and "วิธีรีสปอน" or "Respawn Method",
-    Options = {"Random", "Fake Revive"},
+    Name = "วิธีรีสปอน",
+    Options = {"Random","Fake Revive"},
     CurrentOption = autoRespawnMethod,
     MultipleOptions = false,
     Callback = function(option)
@@ -470,8 +517,11 @@ MainTab:CreateDropdown({
     end
 })
  
+-- =========================
+-- Toggle ปุ่มลอย (แก้แล้ว)
+-- =========================
 MainTab:CreateToggle({
-    Name = lang == "TH" and "ออโต้รีสปอน (ปุ่มลอย)" or "Auto Respawn (Floating Button)",
+    Name = "ออโต้รีสปอน (ปุ่มลอย)",
     CurrentValue = false,
     Callback = function(state)
         if state then
@@ -484,35 +534,73 @@ MainTab:CreateToggle({
 })
  
 -- =========================
--- Warp Up
+-- Warp Up ปกติ
 -- =========================
 TeleportTab:CreateButton({
-    Name = lang == "TH" and "วาร์ปขึ้นบน" or "Warp Up",
+    Name = "วาร์ปขึ้นบน",
     Callback = function()
+        local player = game.Players.LocalPlayer
         local char = player.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(0, 1200, 0)
+        if char then
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = root.CFrame + Vector3.new(0,1200,0)
+            end
         end
     end
 })
  
+-- =========================
+-- Warp Up Floating Button
+-- =========================
 local floatingWarpButton
  
 local function createWarpFloatingButton()
     if floatingWarpButton then return end
  
     local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.5, -70, 0.7, 0)
-    btn.AnchorPoint = Vector2.new(0.5, 0)
+    btn.Size = UDim2.new(0,140,0,52)
+    btn.Position = UDim2.new(0.5,-70,0.7,0)
+    btn.AnchorPoint = Vector2.new(0.5,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,220,255)  -- สีฟ้า
+    btn.BackgroundTransparency = 0.35
+    btn.TextColor3 = Color3.fromRGB(0,70,150)
+    btn.Text = "วาร์ปขึ้นบน"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
     btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
  
-    local stroke = styleFloatingButton(btn, lang == "TH" and "วาร์ปขึ้นบน" or "Warp Up")
-    animateStroke(stroke, Color3.fromRGB(200, 0, 255), Color3.fromRGB(0, 150, 255))
+    -- มุมโค้ง
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,18)
  
+    -- ขอบน้ำเงิน
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2.5
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Color = Color3.fromRGB(0,120,255)
+ 
+    -- ไล่สีสไตล์ Floating Button อื่น
+    task.spawn(function()
+        while btn.Parent do
+            TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = Color3.fromRGB(0,80,255)}):Play()
+            task.wait(0.8)
+            TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = Color3.fromRGB(0,120,255)}):Play()
+            task.wait(0.8)
+        end
+    end)
+ 
+    -- กดปุ่ม
     btn.MouseButton1Click:Connect(function()
+        local player = game.Players.LocalPlayer
         local char = player.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(0, 1200, 0)
+        if char then
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = root.CFrame + Vector3.new(0,1200,0)
+            end
         end
     end)
  
@@ -526,8 +614,9 @@ local function removeWarpFloatingButton()
     end
 end
  
+-- Toggle ปุ่มลอย
 TeleportTab:CreateToggle({
-    Name = lang == "TH" and "วาร์ปขึ้นบน (Floating Button)" or "Warp Up (Floating Button)",
+    Name = "วาร์ปขึ้นบน (Floating Button)",
     CurrentValue = false,
     Callback = function(state)
         if state then
@@ -539,68 +628,97 @@ TeleportTab:CreateToggle({
 })
  
 -- =========================
--- Auto Farm Money
+-- VARIABLES
 -- =========================
 local autoFarm = false
 local farmPart
+ 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
+ 
 local LocalPlayer = Players.LocalPlayer
  
+-- =========================
+-- CREATE PART
+-- =========================
 local function createPart()
     if farmPart then return end
+ 
     farmPart = Instance.new("Part")
-    farmPart.Size = Vector3.new(10, 1, 10)
+    farmPart.Size = Vector3.new(10,1,10)
     farmPart.Anchored = true
-    farmPart.Position = Vector3.new(0, 1200, 0)
+    farmPart.Position = Vector3.new(0,1200,0)
     farmPart.Name = "FarmPart"
     farmPart.Parent = workspace
 end
  
+-- =========================
+-- LOOP FARM
+-- =========================
 RunService.Heartbeat:Connect(function()
     if autoFarm then
         createPart()
+ 
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.CFrame = farmPart.CFrame + Vector3.new(0, 3, 0)
+            char.HumanoidRootPart.CFrame = farmPart.CFrame + Vector3.new(0,3,0)
         end
     end
 end)
  
+-- =========================
+-- RESPAWN FIX
+-- =========================
 LocalPlayer.CharacterAdded:Connect(function()
     task.wait(1)
     if autoFarm and farmPart then
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.CFrame = farmPart.CFrame + Vector3.new(0, 3, 0)
+            char.HumanoidRootPart.CFrame = farmPart.CFrame + Vector3.new(0,3,0)
         end
     end
 end)
  
+-- =========================
+-- ANTI AFK
+-- =========================
 LocalPlayer.Idled:Connect(function()
-    VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
     task.wait(1)
-    VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
 end)
  
 TeleportTab:CreateToggle({
-    Name = lang == "TH" and "ออโต้ฟาร์มเงิน" or "Auto Farm Money",
+    Name = "ออโต้ฟาร์มเงิน",
     CurrentValue = false,
     Callback = function(state)
         autoFarm = state
+ 
+        if state then
+            print("ฟาร์ม ON สัส")
+        else
+            print("ฟาร์ม OFF")
+        end
     end
 })
  
 -- =========================
--- วาร์ปไปคนล้มแล้วเด้งกลับ
+-- SERVICES
+-- =========================
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+ 
+-- =========================
+-- FUNCTION วาร์ปไปคนล้มแล้วเด้งกลับ
 -- =========================
 local function teleportToDowned()
     local myChar = LocalPlayer.Character
     if not (myChar and myChar:FindFirstChild("HumanoidRootPart")) then return end
  
     local myRoot = myChar.HumanoidRootPart
-    local oldCFrame = myRoot.CFrame 
+    local oldCFrame = myRoot.CFrame -- จำตำแหน่งเดิม
  
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer and plr.Character then
@@ -608,102 +726,172 @@ local function teleportToDowned()
             local root = plr.Character:FindFirstChild("HumanoidRootPart")
  
             if hum and root and hum.Health <= 0 then
-                myRoot.CFrame = root.CFrame + Vector3.new(0, 3, 0) 
+                myRoot.CFrame = root.CFrame + Vector3.new(0,3,0) -- วาร์ปไป
+                print("วาร์ปไปหา "..plr.Name)
+ 
+                -- รอ 1 วิ แล้วเด้งกลับ
                 task.delay(1, function()
-                    if myRoot then myRoot.CFrame = oldCFrame end
+                    if myRoot then
+                        myRoot.CFrame = oldCFrame
+                        print("กลับที่เดิม")
+                    end
                 end)
+ 
                 return
             end
         end
     end
+ 
+    print("ไม่มีคนล้ม")
 end
  
+-- =========================
+-- ปุ่มปกติ
+-- =========================
 TeleportTab:CreateButton({
-    Name = lang == "TH" and "วาร์ปไปยังผู้เล่นที่ล้ม" or "Warp to Downed Player",
+    Name = "วาร์ปไปยังผู้เล่นที่ล้ม",
     Callback = function()
         teleportToDowned()
     end
 })
  
-local floatingDownedWarpButton
+-- =========================
+-- FLOATING BUTTON
+-- =========================
+local floatingWarpButton
  
-local function createDownedWarpFloatingButton()
-    if floatingDownedWarpButton then return end
+local function createWarpFloatingButton()
+    if floatingWarpButton then return end
  
     local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.7, -70, 0.7, 0)
-    btn.AnchorPoint = Vector2.new(0.5, 0)
+    btn.Size = UDim2.new(0,160,0,52)
+    btn.Position = UDim2.new(0.7,-70,0.7,0)
+    btn.AnchorPoint = Vector2.new(0.5,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,220,255)
+    btn.BackgroundTransparency = 0.35
+    btn.TextColor3 = Color3.fromRGB(0,70,150)
+    btn.Text = "วาร์ปไปผู้เล่นล้ม"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
     btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
  
-    local stroke = styleFloatingButton(btn, lang == "TH" and "วาร์ปไปผู้เล่นล้ม" or "Warp to Downed")
-    animateStroke(stroke, Color3.fromRGB(0, 255, 200), Color3.fromRGB(0, 100, 255))
+    -- มุมโค้ง
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,18)
  
+    -- ขอบ
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2.5
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Color = Color3.fromRGB(0,120,255)
+ 
+    -- ไล่สีขอบ
+    task.spawn(function()
+        while btn.Parent do
+            TweenService:Create(
+                stroke,
+                TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {Color = Color3.fromRGB(0,80,255)}
+            ):Play()
+            task.wait(0.8)
+ 
+            TweenService:Create(
+                stroke,
+                TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {Color = Color3.fromRGB(160,230,255)}
+            ):Play()
+            task.wait(0.8)
+        end
+    end)
+ 
+    -- กดปุ่ม
     btn.MouseButton1Click:Connect(function()
         teleportToDowned()
     end)
  
-    floatingDownedWarpButton = btn
+    floatingWarpButton = btn
 end
  
-local function removeDownedWarpFloatingButton()
-    if floatingDownedWarpButton then
-        floatingDownedWarpButton:Destroy()
-        floatingDownedWarpButton = nil
+local function removeWarpFloatingButton()
+    if floatingWarpButton then
+        floatingWarpButton:Destroy()
+        floatingWarpButton = nil
     end
 end
  
+-- =========================
+-- TOGGLE ปุ่มลอย
+-- =========================
 TeleportTab:CreateToggle({
-    Name = lang == "TH" and "วาร์ปหาคนล้ม (Floating)" or "Warp to Downed (Floating)",
+    Name = "วาร์ปหาคนล้ม (Floating)",
     CurrentValue = false,
     Callback = function(state)
         if state then
-            createDownedWarpFloatingButton()
+            createWarpFloatingButton()
         else
-            removeDownedWarpFloatingButton()
+            removeWarpFloatingButton()
         end
     end
 })
  
 -- =========================
--- ESP Player
+-- SERVICES
+-- =========================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+ 
+-- =========================
+-- TABLE เก็บ ESP
 -- =========================
 local ESPTable = {}
  
+-- =========================
+-- FUNCTION เพิ่ม ESP ให้ผู้เล่น
+-- =========================
 local function addESP(plr)
     if ESPTable[plr] or not plr.Character then return end
     local char = plr.Character
+    local hum = char:FindFirstChild("Humanoid")
     local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    if not hum or not root then return end
  
+    -- BillboardGui สำหรับชื่อ
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "ESP_Billboard"
     billboard.Adornee = root
-    billboard.Size = UDim2.new(0, 100, 0, 50)
+    billboard.Size = UDim2.new(0,100,0,50)
     billboard.AlwaysOnTop = true
     billboard.Parent = char
  
     local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.Size = UDim2.new(1,0,1,0)
     textLabel.BackgroundTransparency = 1
-    textLabel.TextColor3 = Color3.fromRGB(0, 150, 255)
-    textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    textLabel.TextColor3 = Color3.fromRGB(0,150,255)
+    textLabel.TextStrokeColor3 = Color3.fromRGB(0,0,0)
     textLabel.TextStrokeTransparency = 0
     textLabel.Font = Enum.Font.GothamBold
     textLabel.TextScaled = true
     textLabel.Text = plr.Name
     textLabel.Parent = billboard
  
+    -- ESP ขอบตัว
     local highlight = Instance.new("Highlight")
     highlight.Name = "ESP_Highlight"
     highlight.Adornee = char
     highlight.FillTransparency = 1
     highlight.OutlineTransparency = 0
-    highlight.OutlineColor = Color3.fromRGB(0, 150, 255)
+    highlight.OutlineColor = Color3.fromRGB(0,150,255)
     highlight.Parent = char
  
     ESPTable[plr] = {Billboard = billboard, Highlight = highlight}
 end
  
+-- =========================
+-- FUNCTION ลบ ESP
+-- =========================
 local function removeESP(plr)
     if ESPTable[plr] then
         local data = ESPTable[plr]
@@ -713,35 +901,55 @@ local function removeESP(plr)
     end
 end
  
+-- =========================
+-- ฟังก์ชันอัปเดตผู้เล่น
+-- =========================
 local function updateESP()
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
-            if not ESPTable[plr] then addESP(plr) end
+            if not ESPTable[plr] then
+                addESP(plr)
+            end
         end
     end
+    -- ลบผู้เล่นที่ออก
     for plr, _ in pairs(ESPTable) do
-        if not Players:FindFirstChild(plr.Name) then removeESP(plr) end
+        if not Players:FindFirstChild(plr.Name) then
+            removeESP(plr)
+        end
     end
 end
  
+-- =========================
+-- Toggle Visuals
+-- =========================
 local ESPEnabled = false
  
 VisualsTab:CreateToggle({
-    Name = lang == "TH" and "มองหาผู้เล่น" or "Player ESP",
+    Name = "มองหาผู้เล่น",
     CurrentValue = false,
     Callback = function(state)
         ESPEnabled = state
         if not state then
-            for plr, _ in pairs(ESPTable) do removeESP(plr) end
+            -- ปิด ESP ทั้งหมด
+            for plr, _ in pairs(ESPTable) do
+                removeESP(plr)
+            end
         else
             updateESP()
         end
     end
 })
  
+-- =========================
+-- Heartbeat ตรวจผู้เล่นใหม่ / อัปเดตทุกเฟรม
+-- =========================
 RunService.Heartbeat:Connect(function()
-    if ESPEnabled then updateESP() end
+    if ESPEnabled then
+        updateESP()
+    end
 end)
+ 
  
 -- =========================
 -- ESP Nextbot
@@ -765,38 +973,46 @@ end
  
 local function startNextbotESP()
     if nextbotThread then return end
+ 
     nextbotThread = task.spawn(function()
         while nextbotESPEnabled do
             local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Players")
+ 
             if folder then
                 for _, npc in ipairs(folder:GetChildren()) do
                     if npc:GetAttribute("Team") == "Nextbot" then
                         local part = npc:FindFirstChildWhichIsA("BasePart")
                         if part then
                             local billboard = part:FindFirstChild("NextbotESP")
+ 
                             if not billboard then
                                 billboard = Instance.new("BillboardGui")
                                 billboard.Name = "NextbotESP"
                                 billboard.Adornee = part
-                                billboard.Size = UDim2.new(0, 180, 0, 25)
-                                billboard.StudsOffset = Vector3.new(0, 3.2, 0)
+                                billboard.Size = UDim2.new(0,180,0,25)
+                                billboard.StudsOffset = Vector3.new(0,3.2,0)
                                 billboard.AlwaysOnTop = true
                                 billboard.Parent = part
  
                                 local label = Instance.new("TextLabel")
                                 label.Name = "Label"
-                                label.Size = UDim2.new(1, 0, 1, 0)
+                                label.Size = UDim2.new(1,0,1,0)
                                 label.BackgroundTransparency = 1
                                 label.TextScaled = true
-                                label.TextColor3 = Color3.fromRGB(255, 50, 50)
                                 label.Font = Enum.Font.GothamSemibold
                                 label.Parent = billboard
                             end
+ 
                             local label = billboard:FindFirstChild("Label")
                             if label then
                                 local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                                 local dist = hrp and (part.Position - hrp.Position).Magnitude
-                                label.Text = dist and npc.Name.." ("..math.floor(dist)..")" or npc.Name
+ 
+                                if dist then
+                                    label.Text = npc.Name.." ("..math.floor(dist)..")"
+                                else
+                                    label.Text = npc.Name
+                                end
                             end
                         end
                     end
@@ -808,46 +1024,63 @@ local function startNextbotESP()
     end)
 end
  
+-- Toggle ปกติ
 VisualsTab:CreateToggle({
-    Name = lang == "TH" and "มองเน็กบอท" or "Nextbot ESP",
+    Name = "มองเน็กบอท",
     CurrentValue = false,
     Callback = function(state)
         nextbotESPEnabled = state
-        if state then startNextbotESP() else removeNextbotESP() end
+        if state then
+            startNextbotESP()
+        else
+            removeNextbotESP()
+        end
     end
 })
  
+-- ปุ่มลอย
 local function createNextbotFloating()
     if floatingNextbotButton then return end
-    local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.5, 0, 0.6, 0)
-    btn.Parent = FloatingGui
  
-    local function getNextbotText()
-        if lang == "TH" then
-            return nextbotESPEnabled and "เน็กบอท: เปิด" or "เน็กบอท: ปิด"
-        else
-            return nextbotESPEnabled and "Nextbot: ON" or "Nextbot: OFF"
-        end
-    end
-
-    local stroke = styleFloatingButton(btn, getNextbotText())
-    animateStroke(stroke, Color3.fromRGB(255, 0, 50), Color3.fromRGB(255, 150, 0))
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0,150,0,50)
+    btn.Position = UDim2.new(0.5,0,0.6,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,220,255)
+    btn.TextColor3 = Color3.fromRGB(0,70,150)
+    btn.Text = "Nextbot: OFF"
+    btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
+ 
+    local stroke = Instance.new("UIStroke",btn)
+    stroke.Color = Color3.fromRGB(0,120,255)
  
     btn.MouseButton1Click:Connect(function()
         nextbotESPEnabled = not nextbotESPEnabled
-        btn.Text = getNextbotText()
-        btn.TextColor3 = nextbotESPEnabled and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(255, 255, 255)
-        if nextbotESPEnabled then startNextbotESP() else removeNextbotESP() end
+        btn.Text = nextbotESPEnabled and "Nextbot: ON" or "Nextbot: OFF"
+ 
+        if nextbotESPEnabled then
+            startNextbotESP()
+        else
+            removeNextbotESP()
+        end
     end)
+ 
     floatingNextbotButton = btn
 end
  
 VisualsTab:CreateToggle({
-    Name = lang == "TH" and "ESP Nextbot (Floating)" or "Nextbot ESP (Floating)",
+    Name = "ESP Nextbot (Floating)",
     CurrentValue = false,
     Callback = function(state)
-        if state then createNextbotFloating() else if floatingNextbotButton then floatingNextbotButton:Destroy() floatingNextbotButton = nil end end
+        if state then
+            createNextbotFloating()
+        else
+            if floatingNextbotButton then
+                floatingNextbotButton:Destroy()
+                floatingNextbotButton = nil
+            end
+        end
     end
 })
  
@@ -868,48 +1101,64 @@ local function createTicketESP(part)
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "TicketESP"
     billboard.Adornee = part
-    billboard.Size = UDim2.new(0, 180, 0, 25)
-    billboard.StudsOffset = Vector3.new(0, 3.2, 0)
+    billboard.Size = UDim2.new(0,180,0,25)
+    billboard.StudsOffset = Vector3.new(0,3.2,0)
     billboard.AlwaysOnTop = true
     billboard.Parent = part
  
     local label = Instance.new("TextLabel")
     label.Name = "Ticket"
-    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Size = UDim2.new(1,0,1,0)
     label.BackgroundTransparency = 1
     label.TextStrokeTransparency = 0.25
     label.TextScaled = true
     label.Font = Enum.Font.GothamSemibold
-    label.TextColor3 = Color3.fromRGB(255, 255, 150)
+    label.TextColor3 = Color3.fromRGB(255,255,150)
     label.Text = "Ticket"
     label.Parent = billboard
+ 
     return billboard
 end
  
 local function removeTicketESP()
-    local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Effects") and workspace.Game.Effects:FindFirstChild("Tickets")
+    local folder = workspace:FindFirstChild("Game")
+        and workspace.Game:FindFirstChild("Effects")
+        and workspace.Game.Effects:FindFirstChild("Tickets")
+ 
     if folder then
         for _, v in ipairs(folder:GetChildren()) do
             local part = v:FindFirstChildWhichIsA("BasePart")
-            if part then local esp = part:FindFirstChild("TicketESP") if esp then esp:Destroy() end end
+            if part then
+                local esp = part:FindFirstChild("TicketESP")
+                if esp then esp:Destroy() end
+            end
         end
     end
 end
  
 local function startTicketESP()
     if ticketESPThread then return end
+ 
     ticketESPThread = task.spawn(function()
         while ticketESPEnabled do
-            local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Effects") and workspace.Game.Effects:FindFirstChild("Tickets")
+            local folder = workspace:FindFirstChild("Game")
+                and workspace.Game:FindFirstChild("Effects")
+                and workspace.Game.Effects:FindFirstChild("Tickets")
+ 
             if folder then
                 for _, v in ipairs(folder:GetChildren()) do
                     local part = v:FindFirstChildWhichIsA("BasePart")
                     if part then
                         local billboard = part:FindFirstChild("TicketESP") or createTicketESP(part)
                         local label = billboard:FindFirstChild("Ticket")
+ 
                         if label then
                             local dist = getDistance(part.Position)
-                            label.Text = dist and v.Name.." ("..math.floor(dist)..")" or v.Name
+                            if dist then
+                                label.Text = v.Name.." ("..math.floor(dist)..")"
+                            else
+                                label.Text = v.Name
+                            end
                         end
                     end
                 end
@@ -920,134 +1169,215 @@ local function startTicketESP()
     end)
 end
  
+-- Toggle ปกติ
 EventTab:CreateToggle({
-    Name = lang == "TH" and "มองตั๋ว (ESP Ticket)" or "Ticket ESP",
+    Name = "มองตั๋ว (ESP Ticket)",
     CurrentValue = false,
     Callback = function(state)
         ticketESPEnabled = state
-        if state then startTicketESP() else removeTicketESP() end
+        if state then
+            startTicketESP()
+        else
+            removeTicketESP()
+        end
     end
 })
  
+-- ปุ่มลอย
 local function createTicketFloating()
     if floatingTicketButton then return end
-    local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.3, 0, 0.5, 0)
-    btn.Parent = FloatingGui
  
-    local function getTicketText()
-        if lang == "TH" then
-            return ticketESPEnabled and "ตั๋ว: เปิด" or "ตั๋ว: ปิด"
-        else
-            return ticketESPEnabled and "Ticket ESP: ON" or "Ticket ESP: OFF"
-        end
-    end
-
-    local stroke = styleFloatingButton(btn, getTicketText())
-    animateStroke(stroke, Color3.fromRGB(255, 255, 0), Color3.fromRGB(0, 255, 100))
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0,150,0,50)
+    btn.Position = UDim2.new(0.3,0,0.5,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,220,255)
+    btn.TextColor3 = Color3.fromRGB(0,70,150)
+    btn.Text = "Ticket ESP: OFF"
+    btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
+ 
+    local stroke = Instance.new("UIStroke",btn)
+    stroke.Color = Color3.fromRGB(0,120,255)
  
     btn.MouseButton1Click:Connect(function()
         ticketESPEnabled = not ticketESPEnabled
-        btn.Text = getTicketText()
-        btn.TextColor3 = ticketESPEnabled and Color3.fromRGB(255, 255, 100) or Color3.fromRGB(255, 255, 255)
-        if ticketESPEnabled then startTicketESP() else removeTicketESP() end
+        btn.Text = ticketESPEnabled and "Ticket ESP: ON" or "Ticket ESP: OFF"
+ 
+        if ticketESPEnabled then
+            startTicketESP()
+        else
+            removeTicketESP()
+        end
     end)
+ 
     floatingTicketButton = btn
 end
  
 EventTab:CreateToggle({
-    Name = lang == "TH" and "ESP Ticket (Floating)" or "Ticket ESP (Floating)",
+    Name = "ESP Ticket (Floating)",
     CurrentValue = false,
     Callback = function(state)
-        if state then createTicketFloating() else if floatingTicketButton then floatingTicketButton:Destroy() floatingTicketButton = nil end end
-    end
-})
- 
-VisualsTab:CreateToggle({
-    Name = lang == "TH" and "มองตั๋ว (ESP Ticket) " or "Ticket ESP ",
-    CurrentValue = false,
-    Callback = function(state)
-        ticketESPEnabled = state
-        if state then startTicketESP() else removeTicketESP() end
+        if state then
+            createTicketFloating()
+        else
+            if floatingTicketButton then
+                floatingTicketButton:Destroy()
+                floatingTicketButton = nil
+            end
+        end
     end
 })
  
 -- =========================
--- Noclip
+-- Toggle ซ้ำใน VisualsTab
+-- =========================
+VisualsTab:CreateToggle({
+    Name = "มองตั๋ว (ESP Ticket)",
+    CurrentValue = false,
+    Callback = function(state)
+        ticketESPEnabled = state
+ 
+        if state then
+            startTicketESP()
+        else
+            removeTicketESP()
+        end
+    end
+})
+ 
+-- =========================
+-- Noclip (ทะลุกำแพง)
 -- =========================
 local noclipEnabled = false
 local noclipConnection
  
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+ 
 local function startNoclip()
     if noclipConnection then return end
+ 
     noclipConnection = game:GetService("RunService").Stepped:Connect(function()
         if noclipEnabled then
             local char = LocalPlayer.Character
             if char then
-                for _, v in pairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
+                for _, v in pairs(char:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.CanCollide = false
+                    end
+                end
             end
         end
     end)
 end
  
 local function stopNoclip()
-    if noclipConnection then noclipConnection:Disconnect() noclipConnection = nil end
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+ 
+    -- คืนค่าการชนกลับ
     local char = LocalPlayer.Character
     if char then
-        for _, v in pairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = true end end
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = true
+            end
+        end
     end
 end
  
+-- =========================
+-- Toggle ปกติ
+-- =========================
 ExtraTab:CreateToggle({
-    Name = lang == "TH" and "ทะลุกำแพง" or "Noclip",
+    Name = "ทะลุกำแพง",
     CurrentValue = false,
     Callback = function(state)
         noclipEnabled = state
-        if state then startNoclip() else stopNoclip() end
+ 
+        if state then
+            startNoclip()
+        else
+            stopNoclip()
+        end
     end
 })
  
+ 
 -- =========================
--- Moon Mode
+-- Moon Mode (ตกช้า)
 -- =========================
 local moonEnabled = false
-local moonGravity = 0.3 
+local moonGravity = 0.3 -- ค่ายิ่งน้อย = ยิ่งลอย
 local moonConnection
+ 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
  
 local function startMoon()
     if moonConnection then return end
+ 
     moonConnection = RunService.Heartbeat:Connect(function()
         if not moonEnabled then return end
+ 
         local char = LocalPlayer.Character
         if not char then return end
+ 
         local root = char:FindFirstChild("HumanoidRootPart")
-        if not root then return end
+        local hum = char:FindFirstChild("Humanoid")
+        if not root or not hum then return end
+ 
+        -- ถ้ากำลังตก
         if root.Velocity.Y < -1 then
-            root.Velocity = Vector3.new(root.Velocity.X, root.Velocity.Y * moonGravity, root.Velocity.Z)
+            root.Velocity = Vector3.new(
+                root.Velocity.X,
+                root.Velocity.Y * moonGravity,
+                root.Velocity.Z
+            )
         end
     end)
 end
  
 local function stopMoon()
-    if moonConnection then moonConnection:Disconnect() moonConnection = nil end
+    if moonConnection then
+        moonConnection:Disconnect()
+        moonConnection = nil
+    end
 end
  
+-- =========================
+-- Toggle
+-- =========================
 ExtraTab:CreateToggle({
-    Name = lang == "TH" and "โหมดดวงจันทร์" or "Moon Mode",
+    Name = "โหมดดวงจันทร์",
     CurrentValue = false,
     Callback = function(state)
         moonEnabled = state
-        if state then startMoon() else stopMoon() end
+ 
+        if state then
+            startMoon()
+        else
+            stopMoon()
+        end
     end
 })
  
+-- =========================
+-- ปรับความลอย
+-- =========================
 ExtraTab:CreateInput({
-    Name = lang == "TH" and "แรงโน้มถ่วง (ยิ่งน้อยยิ่งลอย)" or "Gravity (Lower = Floatier)",
-    PlaceholderText = lang == "TH" and "เช่น 0.3" or "e.g. 0.3",
+    Name = "แรงโน้มถ่วง (ยิ่งน้อยยิ่งลอย)",
+    PlaceholderText = "เช่น 0.3",
     RemoveTextAfterFocusLost = false,
     Callback = function(txt)
         local num = tonumber(txt)
-        if num then moonGravity = math.clamp(num, 0, 1) end
+        if num then
+            moonGravity = math.clamp(num, 0, 1)
+        end
     end
 })
  
@@ -1056,35 +1386,82 @@ ExtraTab:CreateInput({
 -- =========================
 local currentMap = nil
  
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+ 
 local function spawnMap(assetId, height)
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
  
-    if currentMap and currentMap.Parent then currentMap:Destroy() currentMap = nil end
+    -- ลบแมพเก่า
+    if currentMap and currentMap.Parent then
+        currentMap:Destroy()
+        currentMap = nil
+    end
  
-    local success, model = pcall(function() return game:GetObjects("rbxassetid://" .. assetId)[1] end)
-    if not success or not model then warn("โหลดแมพไม่สำเร็จ") return end
+    -- โหลดแมพใหม่
+    local success, model = pcall(function()
+        return game:GetObjects("rbxassetid://" .. assetId)[1]
+    end)
+ 
+    if not success or not model then
+        warn("โหลดแมพไม่สำเร็จ")
+        return
+    end
  
     model.Parent = workspace
     currentMap = model
+ 
+    -- ยกแมพขึ้น
     local cf = model:GetPivot()
     model:PivotTo(cf + Vector3.new(0, height, 0))
+ 
     task.wait(0.2)
+ 
+    -- วาร์ปไปบนแมพ
     hrp.CFrame = model:GetPivot() * CFrame.new(0, 3, 0)
 end
  
-MapTab:CreateButton({ Name = "Map: Grow a Garden", Callback = function() spawnMap(105019154044298, 270) end })
-MapTab:CreateButton({ Name = "Map: Brookhaven", Callback = function() spawnMap(108186045609746, 250) end })
-MapTab:CreateButton({ Name = "Map: Free Fire", Callback = function() spawnMap(136952494452456, 250) end })
+-- =========================
+-- Grow a Garden
+-- =========================
+MapTab:CreateButton({
+    Name = "Map: Grow a Garden",
+    Callback = function()
+        spawnMap(105019154044298, 270)
+    end
+})
  
 -- =========================
--- Warp to Most Still Player
+-- Brookhaven (แก้ ID แล้ว)
+-- =========================
+MapTab:CreateButton({
+    Name = "Map: Brookhaven",
+    Callback = function()
+        spawnMap(108186045609746, 250)
+    end
+})
+ 
+-- =========================
+-- Free Fire
+-- =========================
+MapTab:CreateButton({
+    Name = "Map: Free Fire",
+    Callback = function()
+        spawnMap(136952494452456, 250)
+    end
+})
+ 
+-- =========================
+-- Warp to Most Still Player (Toggle Style Single Press)
 -- =========================
 local warpFloatingBtn = nil
  
+-- หา "ผู้เล่นนิ่งสุด"
 local function getMostStillPlayer()
     local myChar = LocalPlayer.Character
     if not myChar then return nil end
+ 
     local myHRP = myChar:FindFirstChild("HumanoidRootPart")
     if not myHRP then return nil end
  
@@ -1096,157 +1473,324 @@ local function getMostStillPlayer()
             local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
             if hrp then
                 local vel = hrp.Velocity.Magnitude
-                if vel < minVel then minVel = vel target = plr end
+                if vel < minVel then
+                    minVel = vel
+                    target = plr
+                end
             end
         end
     end
+ 
     return target
 end
  
+-- วาร์ปไปหา player
 local function warpToPlayer(player)
     if not player or not player.Character then return end
+ 
     local myChar = LocalPlayer.Character
     if not myChar then return end
+ 
     local myHRP = myChar:FindFirstChild("HumanoidRootPart")
     local targetHRP = player.Character:FindFirstChild("HumanoidRootPart")
-    if myHRP and targetHRP then myHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0) end
+ 
+    if myHRP and targetHRP then
+        myHRP.CFrame = targetHRP.CFrame + Vector3.new(0,3,0)
+    end
 end
  
-local function createWarpStillFloatingButton()
+-- =========================
+-- ปุ่มลอย
+-- =========================
+local function createWarpFloatingButton()
     if warpFloatingBtn then return end
-    local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.3, -70, 0.8, 0)
-    btn.AnchorPoint = Vector2.new(0.5, 0)
-    btn.Parent = FloatingGui
  
-    local stroke = styleFloatingButton(btn, lang == "TH" and "วาร์ปผู้เล่นนิ่งสุด" or "Warp to Stillest Player")
-    animateStroke(stroke, Color3.fromRGB(150, 0, 255), Color3.fromRGB(0, 255, 200))
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0,140,0,52)
+    btn.Position = UDim2.new(0.3,-70,0.8,0)
+    btn.AnchorPoint = Vector2.new(0.5,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,220,255)
+    btn.BackgroundTransparency = 0.35
+    btn.TextColor3 = Color3.fromRGB(0,70,150)
+    btn.Text = "วาร์ปผู้เล่นนิ่งสุด"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
+    btn.AutoButtonColor = false
+ 
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,18)
+ 
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2.5
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Color = Color3.fromRGB(0,120,255)
+ 
+    task.spawn(function()
+        while btn.Parent do
+            TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Color = Color3.fromRGB(0,80,255)
+            }):Play()
+            task.wait(0.8)
+            TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Color = Color3.fromRGB(160,230,255)
+            }):Play()
+            task.wait(0.8)
+        end
+    end)
  
     btn.MouseButton1Click:Connect(function()
         local target = getMostStillPlayer()
-        if target then warpToPlayer(target) end
+        if target then
+            warpToPlayer(target)
+        end
     end)
+ 
     warpFloatingBtn = btn
 end
  
+-- =========================
+-- Toggle ปกติใน TeleportTab
+-- =========================
 TeleportTab:CreateToggle({
-    Name = lang == "TH" and "วาร์ปผู้เล่นนิ่งสุด" or "Warp to Most Still Player",
+    Name = "วาร์ปผู้เล่นนิ่งสุด",
     CurrentValue = false,
     Callback = function(state)
-        if state then local target = getMostStillPlayer() if target then warpToPlayer(target) end end
-    end
-})
- 
-TeleportTab:CreateToggle({
-    Name = lang == "TH" and "วาร์ปผู้เล่นนิ่งสุด (ลอย)" or "Warp to Stillest Player (Floating)",
-    CurrentValue = false,
-    Callback = function(state)
-        if state then createWarpStillFloatingButton() if warpFloatingBtn then warpFloatingBtn.Visible = true end else if warpFloatingBtn then warpFloatingBtn.Visible = false end end
+        if state then
+            local target = getMostStillPlayer()
+            if target then
+                warpToPlayer(target)
+            end
+        end
     end
 })
  
 -- =========================
--- FPS Display
+-- Toggle ปุ่มลอยใน TeleportTab
+-- =========================
+TeleportTab:CreateToggle({
+    Name = "วาร์ปผู้เล่นนิ่งสุด (ลอย)",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            createWarpFloatingButton()
+            if warpFloatingBtn then
+                warpFloatingBtn.Visible = true
+            end
+        else
+            if warpFloatingBtn then
+                warpFloatingBtn.Visible = false
+            end
+        end
+    end
+})
+ 
+-- =========================
+-- FPS Display ปรับมือถือ
 -- =========================
 local fpsLabel = nil
 local fpsEnabled = false
  
 local function createFPSLabel()
     if fpsLabel then return end
-    local screenGui = game:GetService("CoreGui"):FindFirstChild("ScreenGui") or Instance.new("ScreenGui", game:GetService("CoreGui"))
+ 
+    local screenGui = game:GetService("CoreGui"):FindFirstChild("ScreenGui")
+    if not screenGui then
+        screenGui = Instance.new("ScreenGui")
+        screenGui.Parent = game:GetService("CoreGui")
+    end
+ 
     fpsLabel = Instance.new("TextLabel")
-    fpsLabel.Size = UDim2.new(0, 120, 0, 30)
-    fpsLabel.Position = UDim2.new(0, 10, 0, 10)
+    fpsLabel.Size = UDim2.new(0,120,0,30)
+    fpsLabel.Position = UDim2.new(0,10,0,10)
     fpsLabel.BackgroundTransparency = 1
-    fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
+    fpsLabel.TextColor3 = Color3.fromRGB(0,120,255)
     fpsLabel.TextStrokeTransparency = 0.25
     fpsLabel.Font = Enum.Font.GothamBold
-    fpsLabel.TextSize = 18
+    fpsLabel.TextSize = 20
     fpsLabel.Text = "FPS: 0"
+    fpsLabel.TextScaled = true
     fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
     fpsLabel.Parent = screenGui
 end
  
+local function removeFPSLabel()
+    if fpsLabel then
+        fpsLabel:Destroy()
+        fpsLabel = nil
+    end
+end
+ 
+-- อัปเดต FPS ทุก 1 วิ
 task.spawn(function()
     local lastTime = tick()
     local frameCount = 0
-    game:GetService("RunService").RenderStepped:Connect(function() if fpsEnabled then frameCount += 1 end end)
+ 
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if fpsEnabled then
+            frameCount += 1
+        end
+    end)
+ 
     while true do
-        task.wait(1)
+        task.wait(1) -- ตรวจทุก 1 วิ
         if fpsEnabled and fpsLabel then
             local now = tick()
             local delta = now - lastTime
-            fpsLabel.Text = "FPS: "..math.floor(frameCount / delta + 0.5)
+            local fps = math.floor(frameCount / delta + 0.5) -- ปรับให้อิงความลื่น
+            fpsLabel.Text = "FPS: "..fps
             frameCount = 0
             lastTime = now
         end
     end
 end)
  
+-- Toggle ใน FPSTab
 FPSTab:CreateToggle({
-    Name = lang == "TH" and "เเสงดงFPS" or "Show FPS",
+    Name = "เเสดงFPS",
     CurrentValue = false,
     Callback = function(state)
         fpsEnabled = state
-        if state then createFPSLabel() else if fpsLabel then fpsLabel:Destroy() fpsLabel = nil end end
+        if state then
+            createFPSLabel()
+        else
+            removeFPSLabel()
+        end
     end
 })
  
 -- =========================
--- Click Teleport
+-- SERVICES
 -- =========================
-local clickTPEnabled = false
-local clickTPFloatingBtn = nil
+local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+ 
+local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
  
+-- =========================
+-- SETTINGS
+-- =========================
+local clickTPEnabled = false
+local floatingBtn = nil
+ 
+-- =========================
+-- FUNCTION: วาร์ปไปตำแหน่งที่กด
+-- =========================
 local function teleportToPosition(position)
     local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not char then return end
+ 
+    local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-    local raycast = workspace:Raycast(position + Vector3.new(0, 50, 0), Vector3.new(0, -200, 0))
-    hrp.CFrame = CFrame.new(raycast and raycast.Position + Vector3.new(0, 3, 0) or position + Vector3.new(0, 3, 0))
+ 
+    -- ยิง Ray ลงพื้น (กันวาร์ปลอย)
+    local rayOrigin = position + Vector3.new(0,50,0)
+    local rayDir = Vector3.new(0,-200,0)
+ 
+    local raycast = Workspace:Raycast(rayOrigin, rayDir)
+    if raycast then
+        hrp.CFrame = CFrame.new(raycast.Position + Vector3.new(0,3,0))
+    else
+        hrp.CFrame = CFrame.new(position + Vector3.new(0,3,0))
+    end
 end
  
-UserInputService.InputBegan:Connect(function(input, processed)
-    if not clickTPEnabled or processed then return end
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        teleportToPosition(Mouse.Hit.Position)
+-- =========================
+-- CLICK DETECT (มือถือ + PC)
+-- =========================
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not clickTPEnabled then return end
+    if gameProcessed then return end
+ 
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+ 
+        local pos = Mouse.Hit.Position
+        teleportToPosition(pos)
     end
 end)
  
-local function createClickTPFloating()
-    if clickTPFloatingBtn then return end
+-- =========================
+-- FLOATING BUTTON
+-- =========================
+local function createFloatingButton()
+    if floatingBtn then return end
+ 
     local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.5, 0, 0.75, 0)
-    btn.AnchorPoint = Vector2.new(0.5, 0)
+    btn.Size = UDim2.new(0,150,0,52)
+    btn.Position = UDim2.new(0.5,0,0.75,0)
+    btn.AnchorPoint = Vector2.new(0.5,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,220,255)
+    btn.BackgroundTransparency = 0.35
+    btn.TextColor3 = Color3.fromRGB(0,70,150)
+    btn.Text = "Click TP: OFF"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
     btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
+    btn.AutoButtonColor = false
  
-    local function getClickTPText()
-        if lang == "TH" then
-            return clickTPEnabled and "คลิกวาร์ป: เปิด" or "คลิกวาร์ป: ปิด"
-        else
-            return clickTPEnabled and "Click TP: ON" or "Click TP: OFF"
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,18)
+ 
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2.5
+    stroke.Color = Color3.fromRGB(0,120,255)
+ 
+    -- สีขอบวิ่ง
+    task.spawn(function()
+        while btn.Parent do
+            TweenService:Create(stroke, TweenInfo.new(0.8), {
+                Color = Color3.fromRGB(0,80,255)
+            }):Play()
+            task.wait(0.8)
+            TweenService:Create(stroke, TweenInfo.new(0.8), {
+                Color = Color3.fromRGB(160,230,255)
+            }):Play()
+            task.wait(0.8)
         end
-    end
-
-    local stroke = styleFloatingButton(btn, getClickTPText())
-    animateStroke(stroke, Color3.fromRGB(0, 150, 255), Color3.fromRGB(0, 255, 150))
+    end)
  
+    -- กดเปิด/ปิด
     btn.MouseButton1Click:Connect(function()
         clickTPEnabled = not clickTPEnabled
-        btn.Text = getClickTPText()
-        btn.TextColor3 = clickTPEnabled and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(255, 255, 255)
+        btn.Text = clickTPEnabled and "Click TP: ON" or "Click TP: OFF"
     end)
-    clickTPFloatingBtn = btn
+ 
+    floatingBtn = btn
 end
  
-TeleportTab:CreateToggle({ Name = lang == "TH" and "คลิก เทเลพอร์ต" or "Click Teleport", CurrentValue = false, Callback = function(state) clickTPEnabled = state end })
+-- =========================
+-- TOGGLE ใน TeleportTab
+-- =========================
 TeleportTab:CreateToggle({
-    Name = lang == "TH" and "คลิก เทเลพอร์ต (ลอย)" or "Click Teleport (Floating)",
+    Name = "คลิก เทเลพอร์ต",
     CurrentValue = false,
     Callback = function(state)
-        if state then createClickTPFloating() if clickTPFloatingBtn then clickTPFloatingBtn.Visible = true end else if clickTPFloatingBtn then clickTPFloatingBtn.Visible = false clickTPEnabled = false end end
+        clickTPEnabled = state
+    end
+})
+ 
+-- =========================
+-- TOGGLE ปุ่มลอย
+-- =========================
+TeleportTab:CreateToggle({
+    Name = "คลิก เทเลพอร์ต (ลอย)",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            createFloatingButton()
+            if floatingBtn then floatingBtn.Visible = true end
+        else
+            if floatingBtn then floatingBtn.Visible = false end
+            clickTPEnabled = false
+        end
     end
 })
  
@@ -1255,131 +1799,316 @@ TeleportTab:CreateToggle({
 -- =========================
 local lowGfxEnabled = false
 local originalSettings = {}
+ 
 local Lighting = game:GetService("Lighting")
 local Terrain = workspace:FindFirstChildOfClass("Terrain")
  
+-- เก็บค่าเดิม
 local function saveOriginal()
     originalSettings.FogEnd = Lighting.FogEnd
     originalSettings.Brightness = Lighting.Brightness
     originalSettings.GlobalShadows = Lighting.GlobalShadows
 end
  
+-- เปิด Low Graphics
 local function enableLowGraphics()
-    for _, v in pairs(Lighting:GetChildren()) do if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") then v:Destroy() end end
+    -- ลบเอฟเฟคใน Lighting
+    for _, v in pairs(Lighting:GetChildren()) do
+        if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") then
+            v:Destroy()
+        end
+    end
+ 
+    -- ปิดหมอก
     Lighting.FogEnd = 100000
     Lighting.GlobalShadows = false
     Lighting.Brightness = 1
+ 
+    -- ทำ Part เรียบ
     for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") then obj.Material = Enum.Material.SmoothPlastic obj.Reflectance = 0 end
-        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then obj.Enabled = false end
-        if obj:IsA("Decal") or obj:IsA("Texture") then obj:Destroy() end
+        if obj:IsA("BasePart") then
+            obj.Material = Enum.Material.SmoothPlastic
+            obj.Reflectance = 0
+        end
+ 
+        -- ปิดอนุภาค/เอฟเฟค
+        if obj:IsA("ParticleEmitter") 
+        or obj:IsA("Trail") 
+        or obj:IsA("Smoke") 
+        or obj:IsA("Fire") then
+            obj.Enabled = false
+        end
+ 
+        -- ปิด Decal/Texture (ลบลาย)
+        if obj:IsA("Decal") or obj:IsA("Texture") then
+            obj:Destroy()
+        end
     end
-    if Terrain then Terrain.WaterWaveSize = 0 Terrain.WaterWaveSpeed = 0 Terrain.WaterReflectance = 0 Terrain.WaterTransparency = 1 end
+ 
+    -- Terrain เรียบ
+    if Terrain then
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 1
+    end
 end
  
+-- ปิด Low Graphics
+local function disableLowGraphics()
+    -- คืนค่า Lighting บางส่วน
+    if originalSettings.FogEnd then
+        Lighting.FogEnd = originalSettings.FogEnd
+        Lighting.Brightness = originalSettings.Brightness
+        Lighting.GlobalShadows = originalSettings.GlobalShadows
+    end
+end
+ 
+-- =========================
+-- Toggle ใน FPSTab
+-- =========================
 FPSTab:CreateToggle({
-    Name = lang == "TH" and "ลดกราฟฟิก" or "Low Graphics Mode",
+    Name = "ลดกราฟฟิก",
     CurrentValue = false,
     Callback = function(state)
         lowGfxEnabled = state
-        if state then saveOriginal() enableLowGraphics() else if originalSettings.FogEnd then Lighting.FogEnd = originalSettings.FogEnd Lighting.Brightness = originalSettings.Brightness Lighting.GlobalShadows = originalSettings.GlobalShadows end end
+        if state then
+            saveOriginal()
+            enableLowGraphics()
+        else
+            disableLowGraphics()
+        end
     end
 })
  
 -- =========================
--- Dash Smooth
+-- DASH SMOOTH (FULL VERSION)
 -- =========================
 local dashEnabled = false
 local dashSpeed = 80
 local dashVelocity = nil
 local floatingDashButton = nil
  
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+ 
+-- =========================
+-- RESET กันบัค
+-- =========================
 local function resetDash()
     dashEnabled = false
-    if dashVelocity then dashVelocity:Destroy() dashVelocity = nil end
+ 
+    if dashVelocity then
+        dashVelocity:Destroy()
+        dashVelocity = nil
+    end
 end
  
-player.CharacterAdded:Connect(function() task.wait(0.3) resetDash() end)
+player.CharacterAdded:Connect(function()
+    task.wait(0.3)
+    resetDash()
+end)
  
+-- =========================
+-- START DASH
+-- =========================
 local function startDash()
     if dashVelocity then return end
+ 
     local char = player.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not char then return end
+ 
+    local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return end
  
     dashVelocity = Instance.new("BodyVelocity")
-    dashVelocity.MaxForce = Vector3.new(999999, 0, 999999)
+    dashVelocity.MaxForce = Vector3.new(999999,0,999999)
     dashVelocity.P = 1250
     dashVelocity.Parent = root
  
     task.spawn(function()
         while dashEnabled do
-            local curChar = player.Character
-            local curRoot = curChar and curChar:FindFirstChild("HumanoidRootPart")
+            local char = player.Character
+            if not char then break end
+ 
+            local root = char:FindFirstChild("HumanoidRootPart")
             local cam = workspace.CurrentCamera
-            if not curRoot or not cam then break end
+ 
+            if not root or not cam then break end
+ 
             local dir = cam.CFrame.LookVector
-            dir = Vector3.new(dir.X, 0, dir.Z)
-            if dir.Magnitude > 0 then dir = dir.Unit end
+            dir = Vector3.new(dir.X,0,dir.Z)
+ 
+            if dir.Magnitude > 0 then
+                dir = dir.Unit
+            end
+ 
             dashVelocity.Velocity = dir * dashSpeed
             task.wait(0.03)
         end
-        resetDash()
+ 
+        if dashVelocity then
+            dashVelocity:Destroy()
+            dashVelocity = nil
+        end
     end)
 end
  
-SettingsTab:CreateToggle({ Name = lang == "TH" and "Dash Smooth" or "Dash Smooth", CurrentValue = false, Callback = function(state) dashEnabled = state if state then startDash() else resetDash() end end })
-SettingsTab:CreateInput({ Name = lang == "TH" and "ความเร็วแดช" or "Dash Speed", PlaceholderText = lang == "TH" and "ค่าเริ่มต้น 80" or "Default 80", RemoveTextAfterFocusLost = false, Callback = function(txt) local num = tonumber(txt) if num then dashSpeed = num end end })
+-- =========================
+-- 🔘 Toggle ปกติ
+-- =========================
+SettingsTab:CreateToggle({
+    Name = "Dash Smooth",
+    CurrentValue = false,
+    Callback = function(state)
+        dashEnabled = state
  
-local function createDashFloatingButton()
-    if floatingDashButton then return end
-    local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.5, -70, 0.75, 0)
-    btn.AnchorPoint = Vector2.new(0.5, 0)
-    btn.Parent = FloatingGui
- 
-    local function getDashText()
-        if lang == "TH" then
-            return dashEnabled and "แดช: เปิด" or "แดช: ปิด"
+        if state then
+            startDash()
         else
-            return dashEnabled and "Dash: ON" or "Dash: OFF"
+            resetDash()
         end
     end
-
-    local stroke = styleFloatingButton(btn, getDashText())
-    animateStroke(stroke, Color3.fromRGB(0, 150, 255), Color3.fromRGB(200, 0, 255))
+})
  
+-- =========================
+-- 🔧 ปรับความเร็ว
+-- =========================
+SettingsTab:CreateInput({
+    Name = "Dash Speed",
+    PlaceholderText = "ค่าเริ่มต้น 80",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(txt)
+        local num = tonumber(txt)
+        if num then
+            dashSpeed = num
+        end
+    end
+})
+ 
+-- =========================
+-- 🟦 FLOATING BUTTON (สไตล์เดียวกับ Bounce)
+-- =========================
+local function createDashFloatingButton()
+    if floatingDashButton then return end
+ 
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0,140,0,52)
+    btn.Position = UDim2.new(0.5,-70,0.75,0)
+    btn.AnchorPoint = Vector2.new(0.5,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,220,255)
+    btn.BackgroundTransparency = 0.35
+    btn.TextColor3 = Color3.fromRGB(0,70,150)
+    btn.Text = dashEnabled and "Dash: ON" or "Dash: OFF"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
+ 
+    -- มุมโค้ง
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,18)
+ 
+    -- ขอบ
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2.5
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Color = Color3.fromRGB(0,120,255)
+ 
+    -- ไล่สี
+    task.spawn(function()
+        while btn.Parent do
+            TweenService:Create(
+                stroke,
+                TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {Color = Color3.fromRGB(0,80,255)}
+            ):Play()
+            task.wait(0.8)
+            TweenService:Create(
+                stroke,
+                TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {Color = Color3.fromRGB(160,230,255)}
+            ):Play()
+            task.wait(0.8)
+        end
+    end)
+ 
+    -- กดปุ่ม (Toggle จริง)
     btn.MouseButton1Click:Connect(function()
         dashEnabled = not dashEnabled
-        btn.Text = getDashText()
-        btn.TextColor3 = dashEnabled and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(255, 255, 255)
-        if dashEnabled then startDash() else resetDash() end
+        btn.Text = dashEnabled and "Dash: ON" or "Dash: OFF"
+ 
+        if dashEnabled then
+            startDash()
+        else
+            resetDash()
+        end
     end)
+ 
     floatingDashButton = btn
 end
  
-SettingsTab:CreateToggle({ Name = lang == "TH" and "ปุ่มลอยแดช" or "Dash Floating Button", CurrentValue = false, Callback = function(state) if state then createDashFloatingButton() else if floatingDashButton then floatingDashButton:Destroy() floatingDashButton = nil end end end })
+local function removeDashFloatingButton()
+    if floatingDashButton then
+        floatingDashButton:Destroy()
+        floatingDashButton = nil
+    end
+end
  
 -- =========================
--- Auto Carry
+-- 🔘 Toggle ปุ่มลอย
 -- =========================
+SettingsTab:CreateToggle({
+    Name = "Dash Floating Button",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            createDashFloatingButton()
+        else
+            removeDashFloatingButton()
+        end
+    end
+})
+ 
+-- =========================
+-- SYSTEM: Auto Carry Logic
+-- =========================
+ 
 getgenv().autoCarryEnabled = false
 getgenv().autoCarryConnection = nil
 getgenv().floatingCarryButton = nil
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
  
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+ 
+local localPlayer = Players.LocalPlayer
+ 
+-- =========================
+-- START
+-- =========================
 local function startAutoCarry()
     if getgenv().autoCarryConnection then return end
+ 
     getgenv().autoCarryConnection = RunService.Heartbeat:Connect(function()
         if not getgenv().autoCarryEnabled then return end
-        local char = player.Character
+ 
+        local char = localPlayer.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         if not hrp then return end
+ 
         for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            if plr ~= localPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local otherHRP = plr.Character.HumanoidRootPart
-                if (hrp.Position - otherHRP.Position).Magnitude <= 20 then
-                    pcall(function() ReplicatedStorage.Events.Character.Interact:FireServer("Carry", nil, plr.Name) end)
+                local dist = (hrp.Position - otherHRP.Position).Magnitude
+ 
+                if dist <= 20 then
+                    pcall(function()
+                        ReplicatedStorage.Events.Character.Interact:FireServer("Carry", nil, plr.Name)
+                    end)
                     task.wait(0.05)
                 end
             end
@@ -1387,149 +2116,359 @@ local function startAutoCarry()
     end)
 end
  
-local function stopAutoCarry() if getgenv().autoCarryConnection then getgenv().autoCarryConnection:Disconnect() getgenv().autoCarryConnection = nil end end
-player.CharacterAdded:Connect(function() task.wait(0.3) getgenv().autoCarryEnabled = false stopAutoCarry() end)
+-- =========================
+-- STOP
+-- =========================
+local function stopAutoCarry()
+    if getgenv().autoCarryConnection then
+        getgenv().autoCarryConnection:Disconnect()
+        getgenv().autoCarryConnection = nil
+    end
+end
  
+-- =========================
+-- RESET กันบัคตอนตาย
+-- =========================
+local function resetCarry()
+    getgenv().autoCarryEnabled = false
+    stopAutoCarry()
+end
+ 
+localPlayer.CharacterAdded:Connect(function()
+    task.wait(0.3)
+    resetCarry()
+end)
+ 
+-- =========================
+-- 🔘 Toggle ในเมนู
+-- =========================
 MainTab:CreateToggle({
-    Name = lang == "TH" and "อุ้มอัตโนมัติ (Auto Carry)" or "Auto Carry",
+    Name = "Auto Carry",
     CurrentValue = false,
     Callback = function(state)
         getgenv().autoCarryEnabled = state
-        if state then startAutoCarry() else stopAutoCarry() end
-        if getgenv().floatingCarryButton then 
-            if lang == "TH" then
-                getgenv().floatingCarryButton.Text = state and "อุ้มอัตโนมัติ: เปิด" or "อุ้มอัตโนมัติ: ปิด"
-            else
-                getgenv().floatingCarryButton.Text = state and "Auto Carry: ON" or "Auto Carry: OFF"
-            end
+ 
+        if state then
+            startAutoCarry()
+        else
+            stopAutoCarry()
+        end
+ 
+        if getgenv().floatingCarryButton then
+            getgenv().floatingCarryButton.Text =
+                state and "Auto Carry: ON" or "Auto Carry: OFF"
         end
     end
 })
  
+-- =========================
+-- 🟦 FLOATING BUTTON (สไตล์เดียวกับมึง)
+-- =========================
+local PlayerGui = localPlayer:WaitForChild("PlayerGui")
+ 
+local FloatingGui = PlayerGui:FindFirstChild("EvadeFloatingGui")
+if not FloatingGui then
+    FloatingGui = Instance.new("ScreenGui")
+    FloatingGui.Name = "EvadeFloatingGui"
+    FloatingGui.ResetOnSpawn = false
+    FloatingGui.Parent = PlayerGui
+end
+ 
 local function createCarryFloatingButton()
     if getgenv().floatingCarryButton then return end
+ 
     local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.25, 0, 0.75, 0)
-    btn.AnchorPoint = Vector2.new(0.5, 0)
+    btn.Size = UDim2.new(0,140,0,52)
+    btn.Position = UDim2.new(0.25,0,0.75,0)
+    btn.AnchorPoint = Vector2.new(0.5,0)
+    btn.BackgroundColor3 = Color3.fromRGB(180,220,255)
+    btn.BackgroundTransparency = 0.35
+    btn.TextColor3 = Color3.fromRGB(0,70,150)
+    btn.Text = getgenv().autoCarryEnabled and "Auto Carry: ON" or "Auto Carry: OFF"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
     btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
  
-    local function getCarryText()
-        if lang == "TH" then
-            return getgenv().autoCarryEnabled and "อุ้มอัตโนมัติ: เปิด" or "อุ้มอัตโนมัติ: ปิด"
-        else
-            return getgenv().autoCarryEnabled and "Auto Carry: ON" or "Auto Carry: OFF"
+    -- มุมโค้ง
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,18)
+ 
+    -- ขอบ
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2.5
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Color = Color3.fromRGB(0,120,255)
+ 
+    -- ไล่สี (เหมือน Dash / Bounce)
+    task.spawn(function()
+        while btn.Parent do
+            TweenService:Create(
+                stroke,
+                TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {Color = Color3.fromRGB(0,80,255)}
+            ):Play()
+            task.wait(0.8)
+ 
+            TweenService:Create(
+                stroke,
+                TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {Color = Color3.fromRGB(160,230,255)}
+            ):Play()
+            task.wait(0.8)
         end
-    end
-
-    local stroke = styleFloatingButton(btn, getCarryText())
-    animateStroke(stroke, Color3.fromRGB(0, 255, 150), Color3.fromRGB(0, 120, 255))
+    end)
  
+    -- กด = Toggle
     btn.MouseButton1Click:Connect(function()
         getgenv().autoCarryEnabled = not getgenv().autoCarryEnabled
-        if getgenv().autoCarryEnabled then startAutoCarry() else stopAutoCarry() end
-        btn.Text = getCarryText()
-        btn.TextColor3 = getgenv().autoCarryEnabled and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(255, 255, 255)
+ 
+        if getgenv().autoCarryEnabled then
+            startAutoCarry()
+        else
+            stopAutoCarry()
+        end
+ 
+        btn.Text =
+            getgenv().autoCarryEnabled and "Auto Carry: ON" or "Auto Carry: OFF"
     end)
+ 
     getgenv().floatingCarryButton = btn
 end
  
-MainTab:CreateToggle({ Name = lang == "TH" and "ปุ่มลอยอุ้ม" or "Carry Floating Button", CurrentValue = false, Callback = function(state) if state then createCarryFloatingButton() else if getgenv().floatingCarryButton then getgenv().floatingCarryButton:Destroy() getgenv().floatingCarryButton = nil end end end })
- 
-FPSTab:CreateButton({ Name = lang == "TH" and "เพิ่มแสงหน้าจอ" or "Increase Brightness", Callback = function() Lighting.Brightness = (Lighting.Brightness or 2) + 1 end })
+local function removeCarryFloatingButton()
+    if getgenv().floatingCarryButton then
+        getgenv().floatingCarryButton:Destroy()
+        getgenv().floatingCarryButton = nil
+    end
+end
  
 -- =========================
--- Infinite Slide
+-- 🔘 Toggle ปุ่มลอย
 -- =========================
+MainTab:CreateToggle({
+    Name = "Carry Floating Button",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            createCarryFloatingButton()
+        else
+            removeCarryFloatingButton()
+        end
+    end
+})
+ 
+ 
+ 
+-- =========================
+-- ปุ่ม เพิ่มแสงหน้าจอ
+-- =========================
+FPSTab:CreateButton({
+    Name = "เพิ่มแสงหน้าจอ",
+    Callback = function()
+        local Lighting = game:GetService("Lighting")
+        Lighting.Brightness = (Lighting.Brightness or 2) + 1 -- เพิ่มทีละ 1
+        print("✅ เพิ่มแสงเรียบร้อย")
+    end
+})
+ 
+-- =========================
+-- Infinite Slide (MainTab + Floating)
+-- =========================
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+ 
+-- ตัวแปรเก็บสถานะ
 local infiniteSlideEnabled = false
 local slideFrictionValue = -8
-local cachedTables, plrModel, slideConnection, floatingSlideButton
-local keys = {"Friction","AirStrafeAcceleration","JumpHeight","RunDeaccel","JumpSpeedMultiplier","JumpCap","SprintCap","WalkSpeedMultiplier","BhopEnabled","Speed","AirAcceleration","RunAccel","SprintAcceleration"}
+local cachedTables
+local plrModel
+local slideConnection
+local floatingSlideButton
  
-local function hasAll(tbl) if type(tbl) ~= "table" then return false end for _, k in ipairs(keys) do if rawget(tbl, k) == nil then return false end end return true end
-local function setFriction(value) if not cachedTables then return end for _, t in ipairs(cachedTables) do pcall(function() t.Friction = value end) end end
-local function updatePlayerModel() local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Players") plrModel = folder and folder:FindFirstChild(player.Name) or nil end
+-- ฟังก์ชันช่วย
+local keys = {
+    "Friction","AirStrafeAcceleration","JumpHeight","RunDeaccel",
+    "JumpSpeedMultiplier","JumpCap","SprintCap","WalkSpeedMultiplier",
+    "BhopEnabled","Speed","AirAcceleration","RunAccel","SprintAcceleration"
+}
+ 
+local function hasAll(tbl)
+    if type(tbl) ~= "table" then return false end
+    for _, k in ipairs(keys) do if rawget(tbl, k) == nil then return false end end
+    return true
+end
+ 
+local function setFriction(value)
+    if not cachedTables then return end
+    for _, t in ipairs(cachedTables) do
+        pcall(function() t.Friction = value end)
+    end
+end
+ 
+local function updatePlayerModel()
+    local GameFolder = workspace:FindFirstChild("Game")
+    local PlayersFolder = GameFolder and GameFolder:FindFirstChild("Players")
+    if PlayersFolder then
+        plrModel = PlayersFolder:FindFirstChild(player.Name)
+    else
+        plrModel = nil
+    end
+end
  
 local function onHeartbeat()
-    if not plrModel then setFriction(5) return end
-    local success, state = pcall(function() return plrModel:GetAttribute("State") end)
-    if success and state then
-        if state == "Slide" then pcall(function() plrModel:SetAttribute("State", "EmotingSlide") end)
-        elseif state == "EmotingSlide" then setFriction(slideFrictionValue)
-        else setFriction(5) end
-    else setFriction(5) end
+    if not plrModel then setFriction(5); return end
+    local success, currentState = pcall(function() return plrModel:GetAttribute("State") end)
+    if success and currentState then
+        if currentState == "Slide" then
+            pcall(function() plrModel:SetAttribute("State", "EmotingSlide") end)
+        elseif currentState == "EmotingSlide" then
+            setFriction(slideFrictionValue)
+        else
+            setFriction(5)
+        end
+    else
+        setFriction(5)
+    end
 end
  
+-- ฟังก์ชันเปิด/ปิด Infinite Slide
 local function toggleInfiniteSlide()
     infiniteSlideEnabled = not infiniteSlideEnabled
-    if slideConnection then slideConnection:Disconnect() slideConnection = nil end
+ 
+    if slideConnection then slideConnection:Disconnect(); slideConnection=nil end
+ 
     if infiniteSlideEnabled then
         cachedTables = {}
-        for _, obj in ipairs(getgc(true)) do local s, r = pcall(function() if hasAll(obj) then return obj end end) if s and r then table.insert(cachedTables, r) end end
+        for _, obj in ipairs(getgc(true)) do
+            local success, result = pcall(function() if hasAll(obj) then return obj end end)
+            if success and result then table.insert(cachedTables, result) end
+        end
         updatePlayerModel()
         slideConnection = RunService.Heartbeat:Connect(onHeartbeat)
+        player.CharacterAdded:Connect(function() wait(0.1); updatePlayerModel() end)
     else
-        cachedTables = nil plrModel = nil setFriction(5)
+        cachedTables = nil
+        plrModel = nil
+        setFriction(5)
     end
+ 
+    -- อัปเดตปุ่มลอย
     if floatingSlideButton then
-        if lang == "TH" then
-            floatingSlideButton.Text = infiniteSlideEnabled and "สไลด์: เปิด" or "สไลด์: ปิด"
-        else
-            floatingSlideButton.Text = infiniteSlideEnabled and "Slide: ON" or "Slide: OFF"
-        end
-        floatingSlideButton.TextColor3 = infiniteSlideEnabled and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(255, 255, 255)
+        floatingSlideButton.BackgroundColor3 = infiniteSlideEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(200,0,0)
+        floatingSlideButton.Text = infiniteSlideEnabled and "Infinite Slide: ON" or "Infinite Slide: OFF"
     end
 end
  
-MainTab:CreateToggle({ Name = lang == "TH" and "อินฟีนีตี้สไลด์" or "Infinite Slide", CurrentValue = false, Callback = function() toggleInfiniteSlide() end })
+-- =========================
+-- ปุ่มปกติใน MainTab
+MainTab:CreateToggle({
+    Name="อินฟีนีตี้สไลด์",
+    CurrentValue=false,
+    Callback=function(state)
+        toggleInfiniteSlide()
+    end
+})
+ 
+-- =========================
+-- ปุ่มลอย (Floating)
+local PlayerGui = player:WaitForChild("PlayerGui")
+local FloatingGui = PlayerGui:FindFirstChild("EvadeFloatingGui")
+if not FloatingGui then
+    FloatingGui = Instance.new("ScreenGui")
+    FloatingGui.Name = "EvadeFloatingGui"
+    FloatingGui.ResetOnSpawn = false
+    FloatingGui.Parent = PlayerGui
+end
  
 local function createFloatingSlideButton()
     if floatingSlideButton then return end
+ 
     local btn = Instance.new("TextButton")
-    btn.Position = UDim2.new(0.5, -70, 0.4, 0)
-    btn.AnchorPoint = Vector2.new(0.5, 0)
+    btn.Size = UDim2.new(0,140,0,52)
+    btn.Position = UDim2.new(0.5,-70,0.4,0)
+    btn.AnchorPoint = Vector2.new(0.5,0)
+    btn.BackgroundColor3 = infiniteSlideEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(200,0,0)
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Text = infiniteSlideEnabled and "Infinite Slide: ON" or "Infinite Slide: OFF"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Active = true
+    btn.Draggable = true
     btn.Parent = FloatingGui
  
-    local function getSlideText()
-        if lang == "TH" then
-            return infiniteSlideEnabled and "สไลด์: เปิด" or "สไลด์: ปิด"
-        else
-            return infiniteSlideEnabled and "Slide: ON" or "Slide: OFF"
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,18)
+ 
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2.5
+    stroke.Color = Color3.fromRGB(0,120,255)
+ 
+    -- ไล่สีขอบ
+    task.spawn(function()
+        while btn.Parent do
+            TweenService:Create(stroke,TweenInfo.new(0.8,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Color=Color3.fromRGB(0,80,255)}):Play()
+            task.wait(0.8)
+            TweenService:Create(stroke,TweenInfo.new(0.8,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Color=Color3.fromRGB(160,230,255)}):Play()
+            task.wait(0.8)
         end
-    end
-
-    local stroke = styleFloatingButton(btn, getSlideText())
-    animateStroke(stroke, Color3.fromRGB(0, 255, 150), Color3.fromRGB(0, 150, 255))
+    end)
  
     btn.MouseButton1Click:Connect(toggleInfiniteSlide)
+ 
     floatingSlideButton = btn
 end
  
-MainTab:CreateButton({ Name = lang == "TH" and "ปุ่มลอย Infinite Slide" or "Infinite Slide Floating Button", Callback = createFloatingSlideButton })
+MainTab:CreateButton({
+    Name = "ปุ่มลอย Infinite Slide",
+    Callback = createFloatingSlideButton
+})
  
 -- =========================
--- มองหาผู้เล่นล้ม
+-- มองหาผู้เล่นล้ม (VisualsTab)
 -- =========================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VisualsTab = VisualsTab -- มึงต้องมี tab นี้อยู่แล้ว
+local localPlayer = Players.LocalPlayer
 local fallenESPEnabled = false
 local fallenESPLabels = {}
  
-local function clearFallenLabels() for _, lbl in pairs(fallenESPLabels) do if lbl and lbl.Parent then lbl:Destroy() end end fallenESPLabels = {} end
+-- ฟังก์ชันลบป้ายเก่า
+local function clearFallenLabels()
+    for _, lbl in pairs(fallenESPLabels) do
+        if lbl and lbl.Parent then lbl:Destroy() end
+    end
+    fallenESPLabels = {}
+end
+ 
+-- ฟังก์ชันอัปเดต ESP
 local function updateFallenESP()
     clearFallenLabels()
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character and plr.Character:FindFirstChild("Humanoid") then
-            if plr.Character.Humanoid.Health <= 0 then
+        if plr ~= localPlayer and plr.Character and plr.Character:FindFirstChild("Humanoid") then
+            local humanoid = plr.Character.Humanoid
+            if humanoid.Health <= 0 then
                 local head = plr.Character:FindFirstChild("Head")
                 if head then
-                    local bill = Instance.new("BillboardGui", head)
-                    bill.Size = UDim2.new(0, 100, 0, 50)
+                    local bill = Instance.new("BillboardGui")
+                    bill.Size = UDim2.new(0,100,0,50)
+                    bill.Adornee = head
                     bill.AlwaysOnTop = true
-                    local txt = Instance.new("TextLabel", bill)
-                    txt.Size = UDim2.new(1, 0, 1, 0)
+                    bill.Parent = head
+ 
+                    local txt = Instance.new("TextLabel")
+                    txt.Size = UDim2.new(1,0,1,0)
                     txt.BackgroundTransparency = 1
-                    txt.TextColor3 = Color3.fromRGB(255, 0, 0)
-                    txt.Font = Enum.Font.GothamBold
+                    txt.TextColor3 = Color3.fromRGB(255,0,0)
                     txt.TextScaled = true
-                    txt.Text = lang == "TH" and "ล้ม" or "Downed"
+                    txt.Font = Enum.Font.GothamBold
+                    txt.Text = "ล้ม"
+                    txt.Parent = bill
+ 
                     table.insert(fallenESPLabels, bill)
                 end
             end
@@ -1537,268 +2476,483 @@ local function updateFallenESP()
     end
 end
  
-VisualsTab:CreateToggle({ Name = lang == "TH" and "มองหาผู้เล่นล้ม" or "Fallen Player ESP", CurrentValue = false, Callback = function(state) fallenESPEnabled = state if not state then clearFallenLabels() end end })
-RunService.Heartbeat:Connect(function() if fallenESPEnabled then updateFallenESP() end end)
+-- =========================
+-- Toggle ปุ่มใน VisualsTab
+VisualsTab:CreateToggle({
+    Name = "มองหาผู้เล่นล้ม",
+    CurrentValue = false,
+    Callback = function(state)
+        fallenESPEnabled = state
+        if not state then
+            clearFallenLabels()
+        end
+    end
+})
  
 -- =========================
--- Speed / JumpCap
+-- เชื่อม RunService
+RunService.Heartbeat:Connect(function()
+    if fallenESPEnabled then
+        updateFallenESP()
+    end
+end)
+ 
 -- =========================
-local currentSettings = { Speed = 1500, JumpCap = 1, AirStrafeAcceleration = 187 }
-local requiredFields = { Friction=true, AirStrafeAcceleration=true, JumpHeight=true, RunDeaccel=true, JumpSpeedMultiplier=true, JumpCap=true, SprintCap=true, WalkSpeedMultiplier=true, BhopEnabled=true, Speed=true, AirAcceleration=true, RunAccel=true, SprintAcceleration=true }
+-- ตัวแปรหลัก
+-- =========================
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+ 
+local currentSettings = {
+    Speed = 1500,
+    JumpCap = 1,
+    AirStrafeAcceleration = 187
+}
+ 
+-- =========================
+-- ฟังก์ชันค้นหา Table
+-- =========================
+local requiredFields = {
+    Friction=true, AirStrafeAcceleration=true, JumpHeight=true, RunDeaccel=true,
+    JumpSpeedMultiplier=true, JumpCap=true, SprintCap=true, WalkSpeedMultiplier=true,
+    BhopEnabled=true, Speed=true, AirAcceleration=true, RunAccel=true, SprintAcceleration=true
+}
  
 local function getMatchingTables()
     local matched = {}
-    for _, obj in pairs(getgc(true)) do if typeof(obj) == "table" then local ok = true for f in pairs(requiredFields) do if rawget(obj, f) == nil then ok = false break end end if ok then table.insert(matched, obj) end end end
+    for _, obj in pairs(getgc(true)) do
+        if typeof(obj) == "table" then
+            local ok = true
+            for field in pairs(requiredFields) do
+                if rawget(obj, field) == nil then ok = false break end
+            end
+            if ok then
+                table.insert(matched, obj)
+            end
+        end
+    end
     return matched
 end
  
+-- =========================
+-- Apply ค่า
+-- =========================
 local function applyToTables()
-    for _, tbl in ipairs(getMatchingTables()) do pcall(function() tbl.Speed = currentSettings.Speed tbl.JumpCap = currentSettings.JumpCap tbl.AirStrafeAcceleration = currentSettings.AirStrafeAcceleration end) end
+    local tables = getMatchingTables()
+    for _, tbl in ipairs(tables) do
+        pcall(function()
+            tbl.Speed = currentSettings.Speed
+            tbl.JumpCap = currentSettings.JumpCap
+            tbl.AirStrafeAcceleration = currentSettings.AirStrafeAcceleration
+        end)
+    end
 end
  
-SettingsTab:CreateSlider({ Name = lang == "TH" and "ความเร็ว (Speed)" or "Speed", Range = {1450, 5000}, Increment = 10, CurrentValue = currentSettings.Speed, Callback = function(val) currentSettings.Speed = val applyToTables() end })
-SettingsTab:CreateSlider({ Name = lang == "TH" and "ขีดจำกัดการกระโดด (Jump Cap)" or "Jump Cap", Range = {0.1, 5000}, Increment = 0.1, CurrentValue = currentSettings.JumpCap, Callback = function(val) currentSettings.JumpCap = val applyToTables() end })
-SettingsTab:CreateSlider({ Name = lang == "TH" and "ความเร่งกลางอากาศ (Strafe Accel)" or "Strafe Acceleration", Range = {200, 1000}, Increment = 10, CurrentValue = currentSettings.AirStrafeAcceleration, Callback = function(val) currentSettings.AirStrafeAcceleration = val applyToTables() end })
+-- =========================
+-- Slider (ปรับ Max แล้ว)
+-- =========================
  
-getgenv().ApplyMode = "Not Optimized"
-SettingsTab:CreateDropdown({ Name = lang == "TH" and "วิธีใช้งานสคริปต์" or "Apply Method", Options = {"Not Optimized", "Optimized"}, CurrentOption = "Not Optimized", MultipleOptions = false, Callback = function(option) getgenv().ApplyMode = option end })
-player.CharacterAdded:Connect(function() task.wait(1) applyToTables() end)
+-- Speed
+SettingsTab:CreateSlider({
+    Name = "Speed",
+    Range = {1450, 5000},
+    Increment = 10,
+    CurrentValue = currentSettings.Speed,
+    Callback = function(val)
+        currentSettings.Speed = val
+        applyToTables()
+    end
+})
+ 
+-- JumpCap
+SettingsTab:CreateSlider({
+    Name = "Jump Cap",
+    Range = {0.1, 5000},
+    Increment = 0.1,
+    CurrentValue = currentSettings.JumpCap,
+    Callback = function(val)
+        currentSettings.JumpCap = val
+        applyToTables()
+    end
+})
+ 
+-- Strafe Acceleration
+SettingsTab:CreateSlider({
+    Name = "Strafe Acceleration",
+    Range = {200, 1000},
+    Increment = 10,
+    CurrentValue = currentSettings.AirStrafeAcceleration,
+    Callback = function(val)
+        currentSettings.AirStrafeAcceleration = val
+        applyToTables()
+    end
+})
  
 -- =========================
--- วาปหนีบอท
+-- Dropdown Apply Method
+-- =========================
+getgenv().ApplyMode = "Not Optimized"
+ 
+SettingsTab:CreateDropdown({
+    Name = "Apply Method",
+    Options = {"Not Optimized", "Optimized"},
+    CurrentOption = "Not Optimized",
+    MultipleOptions = false,
+    Callback = function(option)
+        getgenv().ApplyMode = option
+    end
+})
+ 
+-- =========================
+-- Apply ตอนเกิดใหม่
+-- =========================
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    applyToTables()
+end)
+ 
+ 
+ 
+-- =========================
+-- วาปหนีบอท (Toggle)
 -- =========================
 local warpBotActive = false
 local warpBotConnection = nil
  
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+ 
+-- ฟังก์ชันหลัก
 local function warpBotLoop()
-    if warpBotConnection then return end
-    warpBotConnection = RunService.Heartbeat:Connect(function()
-        if not warpBotActive then return end
-        local char = player.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if not root then return end
-        local folder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Players")
-        if folder then
-            for _, npc in ipairs(folder:GetChildren()) do
-                if npc:GetAttribute("Team") == "Nextbot" then
-                    local npcPart = npc:FindFirstChild("Root") or npc:FindFirstChild("HumanoidRootPart")
-                    if npcPart and (npcPart.Position - root.Position).Magnitude <= 10 then
-                        local targetPlayer = nil
-                        local maxY = -math.huge
-                        for _, p in ipairs(Players:GetPlayers()) do
-                            if p ~= player and p.Character then
-                                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-                                if hrp and hrp.Position.Y > maxY then maxY = hrp.Position.Y targetPlayer = hrp end
-                            end
-                        end
-                        if targetPlayer then root.CFrame = targetPlayer.CFrame + Vector3.new(0, 2, 0) end
-                    end
-                end
-            end
-        end
-    end)
+	if warpBotConnection then return end
+	warpBotConnection = RunService.Heartbeat:Connect(function()
+		if not warpBotActive then return end
+		local char = LocalPlayer.Character
+		if not char then return end
+		local root = char:FindFirstChild("HumanoidRootPart")
+		if not root then return end
+ 
+		local folder = Workspace:FindFirstChild("Game") and Workspace.Game:FindFirstChild("Players")
+		if folder then
+			for _, npc in ipairs(folder:GetChildren()) do
+				if npc:GetAttribute("Team") == "Nextbot" then
+					local npcPart = npc:FindFirstChild("Root") or npc:FindFirstChild("HumanoidRootPart")
+					if npcPart and (npcPart.Position - root.Position).Magnitude <= 10 then
+						local targetPlayer = nil
+						local maxY = -math.huge
+						for _, plr in ipairs(Players:GetPlayers()) do
+							if plr ~= LocalPlayer and plr.Character then
+								local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+								if hrp and hrp.Position.Y > maxY then
+									maxY = hrp.Position.Y
+									targetPlayer = hrp
+								end
+							end
+						end
+						if targetPlayer then
+							root.CFrame = targetPlayer.CFrame + Vector3.new(0,2,0)
+						end
+					end
+				end
+			end
+		end
+	end)
 end
  
-ExtraTab:CreateToggle({ Name = lang == "TH" and "วาปหนีบอท" or "Warp Away From Bot", CurrentValue = false, Callback = function(state) warpBotActive = state if state then warpBotLoop() else if warpBotConnection then warpBotConnection:Disconnect() warpBotConnection = nil end end end })
-ExtraTab:CreateButton({ Name = lang == "TH" and "เปลี่ยนเป็นกลางวัน" or "Change to Day", Callback = function() Lighting.ClockTime = 12 end })
-ExtraTab:CreateButton({ Name = lang == "TH" and "เปลี่ยนเป็นกลางคืน" or "Change to Night", Callback = function() Lighting.ClockTime = 22 end })
- 
--- =============================
--- ของเสริม : Korblox / Headless
--- =============================
-local extraStatus = { Korblox = false, Headless = false }
-local applying = false
- 
-local function applyBodyMod()
-    if applying then return end applying = true
-    getgenv().Setting = { ["Body"] = { ["Korblox"] = extraStatus.Korblox, ["Headless"] = extraStatus.Headless } }
-    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/khen791/script-khen/refs/heads/main/KorbloxAndHeadless.txt"))() end)
-    task.wait(0.5) applying = false
+-- ฟังก์ชันปิดระบบ
+local function stopWarpBot()
+	if warpBotConnection then
+		warpBotConnection:Disconnect()
+		warpBotConnection = nil
+	end
 end
  
-player.CharacterAdded:Connect(function() task.wait(1.2) applyBodyMod() end)
-ExtraTab:CreateToggle({ Name = lang == "TH" and "ขากุด (Korblox)" or "Korblox Leg", CurrentValue = false, Callback = function(state) extraStatus.Korblox = state applyBodyMod() end })
-ExtraTab:CreateToggle({ Name = lang == "TH" and "หัวล่องหน (Headless)" or "Headless Head", CurrentValue = false, Callback = function(state) extraStatus.Headless = state applyBodyMod() end })
+-- =========================
+-- ปุ่ม Toggle ใน ExtraTab
+-- =========================
+ExtraTab:CreateToggle({
+	Name = "วาปหนีบอท",
+	CurrentValue = false,
+	Callback = function(state)
+		warpBotActive = state
+		if state then
+			warpBotLoop()
+		else
+			stopWarpBot()
+		end
+	end
+})
  
 ExtraTab:CreateButton({
-    Name = lang == "TH" and "ลบมืดออก" or "Remove Darkness",
+    Name = "เปลี่ยนเป็นกลางวัน",
     Callback = function()
-        Lighting.Ambient = Color3.new(1, 1, 1)
-        Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
-        Lighting.Brightness = 3
-        Lighting.ExposureCompensation = 1
-        Lighting.GlobalShadows = false
-        for _, v in pairs(Lighting:GetChildren()) do
-            if v:IsA("ColorCorrectionEffect") or v:IsA("DepthOfFieldEffect") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") or v:IsA("Atmosphere") or v:IsA("Sky") then v:Destroy() end
-        end
+        game:GetService("Lighting").ClockTime = 12
     end
 })
  
--- =========================
--- [อัปเดตใหม่] ระบบสกินหน้าร้านเสก Emote (MARAGE Hub)
--- =========================
-local emoteScriptLoaded = false
+ExtraTab:CreateButton({
+    Name = "เปลี่ยนเป็นกลางคืน",
+    Callback = function()
+        game:GetService("Lighting").ClockTime = 22
+    end
+})
+ 
+-- =============================
+-- ของเสริม : Korblox / Headless (Rayfield Version)
+-- =============================
+ 
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+ 
+-- สถานะ
+local extraStatus = {
+    Korblox = false,
+    Headless = false,
+}
+ 
+local applying = false
+ 
+-- ฟังก์ชันใช้ของเสริม
+local function applyBodyMod()
+    if applying then return end
+    applying = true
+ 
+    getgenv().Setting = {
+        ["Body"] = {
+            ["Korblox"] = extraStatus.Korblox,
+            ["Headless"] = extraStatus.Headless,
+        },
+    }
+ 
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/khen791/script-khen/refs/heads/main/KorbloxAndHeadless.txt"))()
+    end)
+ 
+    task.wait(0.5)
+    applying = false
+end
+ 
+-- =============================
+-- ติดตอนเกิดใหม่ (กันหาย)
+-- =============================
+player.CharacterAdded:Connect(function(char)
+    task.wait(1.2) -- รอโหลดตัวละคร
+    applyBodyMod()
+end)
+ 
+-- =============================
+-- Toggle Korblox
+-- =============================
 ExtraTab:CreateToggle({
-    Name = lang == "TH" and "เปิดแฟ้มอีโมท(เสกท่า)" or "Open Emote Menu",
+    Name = "ขากุด (Korblox)",
     CurrentValue = false,
     Callback = function(state)
-        if state and not emoteScriptLoaded then
-            task.spawn(function()
-                local success, code = pcall(function() return game:HttpGet("https://pastebin.com/raw/rS9i9tmt") end)
-                if success and code then
-                    -- 1. ล้างชื่อเก่าออก เปลี่ยนเป็น MARAGE Hub (Beta) ทั้งหมดแบบ Dynamic
-                    code = code:gsub("KOMAT Unity Hub", "MARAGE Hub (Beta)")
-                    code = code:gsub("KOMAT Hub", "MARAGE Hub (Beta)")
-                    code = code:gsub("Komat Hub", "MARAGE Hub (Beta)")
-                    code = code:gsub("KOMAT", "MARAGE")
-                    code = code:gsub("komat", "MARAGE")
-                    
-                    -- 2. ประมวลผลโค้ดตัวเสกท่า
-                    local func = loadstring(code)
-                    if func then 
-                        func() 
-                        emoteScriptLoaded = true 
-                    end
-                    
-                    -- 3. ระบบ Auto UI Skinning เปลี่ยนกล่องเชยๆ ให้กลายเป็นโมเดิร์นไซเบอร์พังค์
-                    task.wait(0.3)
-                    local targetGui = nil
-                    local searchSources = {game:GetService("CoreGui"), game.Players.LocalPlayer:FindFirstChild("PlayerGui")}
-                    for _, source in ipairs(searchSources) do
-                        if source then
-                            for _, child in ipairs(source:GetChildren()) do
-                                if child:IsA("ScreenGui") and (child:FindFirstChild("ตกลง", true) or child:FindFirstChild("รีเซ็ต", true) or child:FindFirstChild("MARAGE Hub (Beta)", true)) then
-                                    targetGui = child
-                                    break
-                                end
-                            end
-                        end
-                        if targetGui then break end
-                    end
-                    
-                    if targetGui then
-                        for _, obj in ipairs(targetGui:GetDescendants()) do
-                            if obj:IsA("Frame") then
-                                -- ชุบพื้นหลังให้ดูลึกขึ้นแบบกระจกดำ
-                                obj.BackgroundColor3 = Color3.fromRGB(15, 15, 24)
-                                obj.BackgroundTransparency = 0.15
-                                
-                                local corner = obj:FindFirstChildOfClass("UICorner") or Instance.new("UICorner", obj)
-                                corner.CornerRadius = UDim.new(0, 14)
-                                
-                                -- ทำขอบเรืองแสงไฟนีออนวิ่งรอบกล่องเมนู
-                                local stroke = obj:FindFirstChildOfClass("UIStroke") or Instance.new("UIStroke", obj)
-                                stroke.Thickness = 2
-                                stroke.Color = Color3.fromRGB(0, 180, 255)
-                                stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-                                
-                                task.spawn(function()
-                                    local ts = game:GetService("TweenService")
-                                    while stroke and stroke.Parent do
-                                        ts:Create(stroke, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = Color3.fromRGB(0, 120, 255)}):Play()
-                                        task.wait(1.2)
-                                        ts:Create(stroke, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Color = Color3.fromRGB(0, 255, 200)}):Play()
-                                        task.wait(1.2)
-                                    end
-                                end)
-                                
-                            elseif obj:IsA("TextBox") then
-                                -- ปรับเปลี่ยนช่อง Input กรอกชื่อท่าให้เรียบหรู คมชัด สบายตา
-                                obj.BackgroundColor3 = Color3.fromRGB(28, 28, 40)
-                                obj.BackgroundTransparency = 0.4
-                                obj.TextColor3 = Color3.fromRGB(255, 255, 255)
-                                obj.Font = Enum.Font.GothamMedium
-                                obj.TextSize = 14
-                                local c = obj:FindFirstChildOfClass("UICorner") or Instance.new("UICorner", obj)
-                                c.CornerRadius = UDim.new(0, 8)
-                                local s = obj:FindFirstChildOfClass("UIStroke") or Instance.new("UIStroke", obj)
-                                s.Thickness = 1
-                                s.Color = Color3.fromRGB(65, 65, 85)
-                                
-                            elseif obj:IsA("TextButton") then
-                                local c = obj:FindFirstChildOfClass("UICorner") or Instance.new("UICorner", obj)
-                                c.CornerRadius = UDim.new(0, 10)
-                                
-                                -- ปรับปุ่ม "ตกลง" และ "รีเซ็ต" ให้สดใส มีมิติ
-                                if obj.Text == "ตกลง" then
-                                    obj.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
-                                    obj.BackgroundTransparency = 0.1
-                                    obj.TextColor3 = Color3.fromRGB(255, 255, 255)
-                                    obj.Font = Enum.Font.GothamBold
-                                elseif obj.Text == "รีเซ็ต" then
-                                    obj.BackgroundColor3 = Color3.fromRGB(190, 45, 60)
-                                    obj.BackgroundTransparency = 0.1
-                                    obj.TextColor3 = Color3.fromRGB(255, 255, 255)
-                                    obj.Font = Enum.Font.GothamBold
-                                elseif obj.Text == "X" or obj.Text == "x" or obj.Name:lower():find("close") then
-                                    obj.TextColor3 = Color3.fromRGB(255, 75, 75)
-                                    obj.Font = Enum.Font.GothamBold
-                                    obj.BackgroundTransparency = 1
-                                end
-                                
-                            elseif obj:IsA("TextLabel") then
-                                obj.Font = Enum.Font.GothamBold
-                                if string.find(obj.Text, "MARAGE") then
-                                    obj.TextColor3 = Color3.fromRGB(0, 255, 220) -- เน้นสีแบรนด์ใหม่เด่นๆ
-                                else
-                                    obj.TextColor3 = Color3.fromRGB(230, 230, 240)
-                                end
-                            end
-                        end
-                    end
-                end
-            end)
-        end
+        extraStatus.Korblox = state
+        applyBodyMod()
+    end
+})
+ 
+-- =============================
+-- Toggle Headless
+-- =============================
+ExtraTab:CreateToggle({
+    Name = "หัวล่องหน (Headless)",
+    CurrentValue = false,
+    Callback = function(state)
+        extraStatus.Headless = state
+        applyBodyMod()
     end
 })
  
 -- =========================
--- ลบ/คืนค่า Barrier
+-- ปุ่มลบความมืด / เพิ่มแสง
 -- =========================
+ExtraTab:CreateButton({
+    Name = "ลบมืดออก",
+    Callback = function()
+        local Lighting = game:GetService("Lighting")
+ 
+        -- ปรับแสงให้สว่าง
+        Lighting.Ambient = Color3.new(1,1,1)
+        Lighting.OutdoorAmbient = Color3.new(1,1,1)
+        Lighting.Brightness = 3
+        Lighting.ExposureCompensation = 1
+ 
+        -- ปิด Shadow
+        Lighting.GlobalShadows = false
+ 
+        -- ลบเอฟเฟกต์มืดทั้งหมด
+        for _, v in pairs(Lighting:GetChildren()) do
+            if v:IsA("ColorCorrectionEffect")
+            or v:IsA("DepthOfFieldEffect")
+            or v:IsA("BloomEffect")
+            or v:IsA("SunRaysEffect")
+            or v:IsA("Atmosphere")
+            or v:IsA("Sky") then
+                v:Destroy()
+            end
+        end
+ 
+        print("Map สว่างขึ้นแล้วสัส") -- แจ้งเตือนใน Output
+    end
+})
+ 
+-- =========================
+-- TOGGLE รัน Emote Script (Rayfield)
+-- =========================
+local emoteScriptLoaded = false
+ 
+ExtraTab:CreateToggle({
+    Name = "เปิดแฟ้มอีโมท(เสกท่า)",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            -- เปิด
+            if not emoteScriptLoaded then
+                local url = "https://pastebin.com/raw/vrDVW2re"
+ 
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet(url))()
+                end)
+ 
+                if success then
+                    emoteScriptLoaded = true
+                    print("โหลด Emote Script แล้วสัส")
+                else
+                    warn("รันไม่ได้: "..tostring(err))
+                end
+            else
+                print("สคริปมันโหลดไปแล้วนะสัส")
+            end
+        else
+            -- ปิด (ทำได้แค่แจ้งเตือน เพราะ Pastebin ส่วนใหญ่ปิดไม่ได้)
+            print("ปิดไม่ได้จริง แค่หยุดใช้เฉยๆสัส")
+        end
+    end
+})
+ 
+ 
+-- =========================
+-- ลบ/คืนค่า Barrier & MapBarrier (MainTab)
+-- =========================
+ 
+local workspace = game:GetService("Workspace")
+ 
 local hiddenParts = {}
+local deleteToggle = false
+ 
+-- หา Part ทั้งแมพ
 local function findParts()
     local found = {}
-    for _, obj in ipairs(workspace:GetDescendants()) do if obj:IsA("BasePart") and (obj.Name == "Barrier" or obj.Name == "MapBarrier") then table.insert(found, obj) end end
+ 
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and (obj.Name == "Barrier" or obj.Name == "MapBarrier") then
+            table.insert(found, obj)
+        end
+    end
+ 
     return found
 end
  
+-- ลบทั้งหมด
+local function deleteAll()
+    for _, part in ipairs(findParts()) do
+        if part and part.Parent and not hiddenParts[part] then
+            hiddenParts[part] = {
+                Parent = part.Parent,
+                CFrame = part.CFrame,
+                Transparency = part.Transparency,
+                CanCollide = part.CanCollide
+            }
+ 
+            part.Parent = nil
+        end
+    end
+end
+ 
+-- คืนค่าทั้งหมด
+local function restoreAll()
+    for part, data in pairs(hiddenParts) do
+        if part then
+            pcall(function()
+                part.Parent = data.Parent
+                part.CFrame = data.CFrame
+                part.Transparency = data.Transparency
+                part.CanCollide = data.CanCollide
+            end)
+        end
+    end
+ 
+    hiddenParts = {}
+end
+ 
+-- =========================
+-- TOGGLE (MainTab)
+-- =========================
 MainTab:CreateToggle({
-    Name = lang == "TH" and "ลบ/คืนค่า Barrier" or "Remove/Restore Barrier",
+    Name = "ลบ/คืนค่า Barrier",
     CurrentValue = false,
     Callback = function(state)
+        deleteToggle = state
+ 
         if state then
-            for _, part in ipairs(findParts()) do
-                if part and part.Parent and not hiddenParts[part] then
-                    hiddenParts[part] = { Parent = part.Parent, CFrame = part.CFrame, Transparency = part.Transparency, CanCollide = part.CanCollide }
-                    part.Parent = nil
-                end
-            end
+            deleteAll()
+            print("ลบ Barrier หมดแล้วสัส")
         else
-            for part, data in pairs(hiddenParts) do if part then pcall(function() part.Parent = data.Parent part.CFrame = data.CFrame part.Transparency = data.Transparency part.CanCollide = data.CanCollide end) end end
-            hiddenParts = {}
+            restoreAll()
+            print("คืนค่า Barrier แล้วสัส")
         end
     end
 })
  
 -- =========================
--- พื้นใส
+-- พื้นใส (Reflectance Toggle) - เข้ากับสไตล์ของมึง
 -- =========================
+local floorReflectOn = false
 local originalParts = {}
+ 
+local function enableFloorReflect()
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			-- เก็บค่าเดิม
+			if not originalParts[obj] then
+				originalParts[obj] = {
+					Material = obj.Material,
+					Reflectance = obj.Reflectance
+				}
+			end
+			obj.Material = Enum.Material.SmoothPlastic
+			obj.Reflectance = 0.3
+		end
+	end
+end
+ 
+local function disableFloorReflect()
+	for obj, data in pairs(originalParts) do
+		if obj and obj.Parent then
+			obj.Material = data.Material
+			obj.Reflectance = data.Reflectance
+		end
+	end
+	originalParts = {}
+end
+ 
+-- =========================
+-- Toggle ใน ExtraTab
+-- =========================
 ExtraTab:CreateToggle({
-    Name = lang == "TH" and "พื้นใส" or "Transparent Floor",
-    CurrentValue = false,
-    Callback = function(state)
-        if state then
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") then
-                    if not originalParts[obj] then originalParts[obj] = { Material = obj.Material, Reflectance = obj.Reflectance } end
-                    obj.Material = Enum.Material.SmoothPlastic
-                    obj.Reflectance = 0.3
-                end
-            end
-        else
-            for obj, data in pairs(originalParts) do if obj and obj.Parent then obj.Material = data.Material obj.Reflectance = data.Reflectance end end
-            originalParts = {}
-        end
-    end
+	Name = "พื้นใส",
+	CurrentValue = false,
+	Callback = function(state)
+		floorReflectOn = state
+		if state then
+			enableFloorReflect()
+			print("เปิดพื้นใสแล้วสัส")
+		else
+			disableFloorReflect()
+			print("ปิดพื้นใสแล้วสัส")
+		end
+	end
 })
