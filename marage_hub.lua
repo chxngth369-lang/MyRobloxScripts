@@ -3,12 +3,12 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
  
 -- Main Window
 local Window = Rayfield:CreateWindow({
-Name = "Mirage hub (beta)",
+Name = "AetherVox hub (beta)",
 LoadingTitle = "Loading...",
-LoadingSubtitle = "by Mirage",
+LoadingSubtitle = "by AetherVox",
 ConfigurationSaving = {
 Enabled = true,
-FolderName = "Mirage	",
+FolderName = "AetherVox	",
 FileName = "Config"
 }
 })
@@ -2811,7 +2811,7 @@ ExtraTab:CreateToggle({
         if state then
             -- เปิด
             if not emoteScriptLoaded then
-                local url = "https://pastebin.com/raw/vrDVW2re"
+                local url = "https://pastebin.com/raw/QmVcFD9B"
  
                 local success, err = pcall(function()
                     loadstring(game:HttpGet(url))()
